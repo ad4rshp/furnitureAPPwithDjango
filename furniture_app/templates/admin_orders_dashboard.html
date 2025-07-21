@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Order Dashboard - My Furniture App</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="{% static 'admin_dashboard.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>My Furniture Store (Admin)</h1>
+            <nav class="main-nav">
+                <a href="{% url 'furniture_app:index' %}">Home</a>
+                <a href="{% url 'furniture_app:user_profile' %}">My Profile</a>
+                <span class="welcome-message">Hello, {{ user.username }}!</span>
+                <a href="{% url 'admin:index' %}" class="admin-link">Admin Site</a>
+                <a href="{% url 'furniture_app:view_cart' %}" class="cart-icon-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    {% if cart_item_count %}
+                        <span class="cart-badge">{{ cart_item_count }}</span>
+                    {% endif %}
+                </a>
+            </nav>
+        </div>
+    </header>
+    <main>
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="admin-dashboard-container">
+            <h2>All Customer Orders</h2>
+
+            {% if all_orders %}
+                <div class="orders-table-wrapper">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Order Date</th>
+                                <th>Total Price</th>
+                                <th>Shipping Address</th>
+                                <th>Payment Method</th>
+                                <th>Current Status</th>
+                                <th>Update Status</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in all_orders %}
+                                <tr>
+                                    <td data-label="Order ID">#{{ order.id }}</td>
+                                    <td data-label="Customer">{{ order.user.username }}</td>
+                                    <td data-label="Order Date">{{ order.order_date|date:"M d, Y H:i" }}</td>
+                                    <td data-label="Total Price">₹{{ order.total_price|floatformat:2 }}</td>
+                                    <td data-label="Shipping Address">
+                                        {% if order.shipping_address %}
+                                            {{ order.shipping_address.street_address }}, {{ order.shipping_address.city }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td data-label="Payment Method">{{ order.payment_method|default:"N/A" }}</td>
+                                    <td data-label="Current Status">
+                                        <span class="order-status {{ order.status|lower }}">{{ order.get_status_display }}</span>
+                                    </td>
+                                    <td data-label="Update Status">
+                                        <form method="post" action="{% url 'furniture_app:update_order_status' order_pk=order.pk %}" class="status-update-form">
+                                            {% csrf_token %}
+                                            <select name="status" class="status-select">
+                                                {% for choice_value, choice_label in status_choices %}
+                                                    <option value="{{ choice_value }}" {% if order.status == choice_value %}selected{% endif %}>{{ choice_label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <button type="submit" class="update-status-btn">Update</button>
+                                        </form>
+                                    </td>
+                                    <td data-label="Details">
+                                        <a href="{% url 'furniture_app:order_detail' order_pk=order.pk %}" class="view-details-btn">View</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No orders found.</p>
+            {% endif %}
+
+            <div class="admin-dashboard-actions">
+                <a href="{% url 'admin:index' %}" class="admin-action-btn">Go to Main Admin Site</a>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2025 My Furniture App. All rights reserved.</p>
+        {% if user.is_authenticated %}
+            <a href="{% url 'furniture_app:logout' %}" class="footer-logout-link">Logout</a>
+        {% endif %}
+    </footer>
+</body>
+</html>

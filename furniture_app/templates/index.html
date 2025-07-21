@@ -1,0 +1,312 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Furniture Collection - My Furniture App</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="{% static 'carousel.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>My Furniture Store</h1>
+            <nav class="main-nav">
+                <a href="{% url 'furniture_app:index' %}">Home</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'furniture_app:user_profile' %}">My Profile</a>
+                    <span class="welcome-message">Hello, {{ user.username }}!</span>
+                {% else %}
+                    <a href="{% url 'furniture_app:login' %}">Login</a>
+                    <a href="{% url 'furniture_app:signup' %}">Sign Up</a>
+                {% endif %}
+                <a href="{% url 'furniture_app:view_cart' %}" class="cart-icon-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-badge{% if cart_item_count == 0 %} hidden{% endif %}">{{ cart_item_count|default:0 }}</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+    <main>
+        {% if messages %}
+            <ul class="messages" id="django-messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        
+        <div id="ajax-message-container" class="messages" style="display: none;"></div>
+
+        {% if active_sale_banners %}
+            <div class="carousel-container">
+                <div class="carousel-slides">
+                    {% for banner in active_sale_banners %}
+                        <a href="{% url 'furniture_app:product_detail' pk=banner.featured_product.pk %}" class="carousel-slide {% if forloop.first %}is-active{% endif %}">
+                            <div class="sale-banner">
+                                {% if banner.featured_product.image %}
+                                    <img src="{{ banner.featured_product.image.url }}" alt="{{ banner.featured_product.name }}" class="sale-banner-image">
+                                {% else %}
+                                    <img src="https://placehold.co/150x150/E0BBE4/957DAD?text=Product+Image" alt="Placeholder" class="sale-banner-image">
+                                {% endif %}
+                                <div class="sale-banner-content">
+                                    <p class="sale-banner-text">
+                                        {% if banner.custom_message %}
+                                            {{ banner.custom_message }}
+                                        {% else %}
+                                            🎉 <strong>SALE IS LIVE!</strong> Get {{ banner.featured_product.discount_percentage|floatformat:0 }}% flat discount on {{ banner.featured_product.name }}! 🎉
+                                        {% endif %}
+                                    </p>
+                                    {% if banner.sale_end_date %}
+                                        <p class="sale-countdown" data-sale-end-timestamp="{{ banner.sale_end_date|date:'U' }}">Sale ends in: <span class="countdown-display"></span></p>
+                                    {% else %}
+                                        <p class="sale-countdown">Limited time offer!</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+                <div class="carousel-dots">
+                    {% for banner in active_sale_banners %}
+                        <span class="dot {% if forloop.first %}active{% endif %}"></span>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <a href="{% url 'furniture_app:index' %}?category=LIVING_ROOM" class="sale-banner-link">
+                <div class="sale-banner">
+                    <img src="{% static 'placeholder.png' %}" alt="General Sale" class="sale-banner-image">
+                    <div class="sale-banner-content">
+                        <p class="sale-banner-text">🎉 <strong>FLASH SALE!</strong> Explore our latest collections! 🎉</p>
+                    </div>
+                </div>
+            </a>
+        {% endif %}
+
+        <h2>Our Furniture Collection</h2>
+
+        <div class="filter-section">
+            <form method="get" class="filter-form" id="filterForm">
+                <div class="filter-group">
+                    <select name="category" id="category">
+                        <option value="">All Categories</option>
+                        {% for key, value in product_categories %}
+                            <option value="{{ key }}" {% if request.GET.category == key %}selected{% endif %}>{{ value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <select name="material" id="material">
+                        <option value="">All Materials</option>
+                        {% for key, value in product_materials %}
+                            <option value="{{ key }}" {% if request.GET.material == key %}selected{% endif %}>{{ value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <select name="sort_by" id="sort_by">
+                        {% for option in sort_options %}
+                            <option value="{{ option.value }}" {% if request.GET.sort_by == option.value %}selected{% endif %}>{{ option.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group checkbox-group">
+                    <input type="checkbox" name="is_available" id="is_available" value="true" {% if request.GET.is_available == 'true' %}checked{% endif %}>
+                    <label for="is_available">Show In-Stock Items</label>
+                </div>
+
+                <a href="{% url 'furniture_app:index' %}" class="clear-filters-button">Clear Filters</a>
+            </form>
+        </div>
+
+        <div class="product-scroll-container">
+            <div class="product-grid">
+                {% if products %}
+                    {% for product in products %}
+                        <div class="product-item">
+                            <a href="{% url 'furniture_app:product_detail' pk=product.pk %}" class="product-card-link">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+                                {% else %}
+                                    <img src="{% static 'placeholder.png' %}" alt="No image available" class="product-image">
+                                {% endif %}
+
+                                <h3>{{ product.name }}</h3>
+                                {% if product.on_sale and product.discount_percentage > 0 %}
+                                    <p class="original-price">Original Price: ₹<del>{{ product.price|floatformat:2 }}</del></p>
+                                    <p class="sale-price">Sale Price: ₹{{ product.get_discounted_price|floatformat:2 }}</p>
+                                {% else %}
+                                    <p>Price: ₹{{ product.price|floatformat:2 }}</p>
+                                {% endif %}
+                            </a>
+                            
+                            <form action="{% url 'furniture_app:add_to_cart' product.pk %}" method="post" class="add-to-cart-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="add-to-cart-btn">Add to Cart</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No products found matching your criteria. Please adjust your filters or add some from the <a href="{% url 'admin:index' %}">admin panel</a>!</p>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2025 My Furniture App. All rights reserved.</p>
+        {# Removed the footer logout link as requested #}
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterForm = document.getElementById('filterForm');
+            if (filterForm) {
+                const filterElements = filterForm.querySelectorAll('select, input[type="checkbox"]');
+
+                filterElements.forEach(element => {
+                    element.addEventListener('change', function() {
+                        filterForm.submit();
+                    });
+                });
+            }
+
+            const carouselContainer = document.querySelector('.carousel-container');
+            if (carouselContainer) {
+                const slides = document.querySelectorAll('.carousel-slide');
+                const dotsContainer = document.querySelector('.carousel-dots');
+                let currentSlideIndex = 0;
+                let slideInterval;
+                const autoSlideInterval = 8000;
+
+                // Ensure dots are created only once if they aren't already in the HTML
+                if (dotsContainer.children.length === 0) {
+                    slides.forEach((_, index) => {
+                        const dot = document.createElement('span');
+                        dot.classList.add('dot');
+                        if (index === 0) dot.classList.add('active');
+                        dot.addEventListener('click', () => goToSlide(index));
+                        dotsContainer.appendChild(dot);
+                    });
+                }
+                const dots = document.querySelectorAll('.dot'); // Re-query to ensure all dots are captured if dynamically added
+
+                function showSlide(index) {
+                    slides.forEach((slide, i) => {
+                        slide.classList.remove('is-active'); // Use is-active for visibility
+                        dots[i].classList.remove('active');
+                    });
+                    slides[index].classList.add('is-active'); // Activate the current slide
+                    dots[index].classList.add('active');
+                    currentSlideIndex = index;
+                }
+
+                function nextSlide() {
+                    currentSlideIndex = (currentSlideIndex + 1) % slides.length;
+                    showSlide(currentSlideIndex);
+                }
+
+                function goToSlide(index) {
+                    showSlide(index);
+                    resetInterval();
+                }
+
+                function resetInterval() {
+                    clearInterval(slideInterval);
+                    slideInterval = setInterval(nextSlide, autoSlideInterval);
+                }
+
+                showSlide(currentSlideIndex); // Initial display
+                resetInterval(); // Start auto-sliding
+
+                function updateAllCountdowns() {
+                    document.querySelectorAll('.sale-countdown').forEach(saleCountdownElement => {
+                        const countdownDisplay = saleCountdownElement.querySelector('.countdown-display');
+                        if (!countdownDisplay) return;
+
+                        const saleEndTimestamp = parseInt(saleCountdownElement.dataset.saleEndTimestamp);
+                        if (isNaN(saleEndTimestamp)) {
+                            countdownDisplay.textContent = 'N/A';
+                            return;
+                        }
+
+                        const now = Math.floor(Date.now() / 1000);
+                        let secondsLeft = saleEndTimestamp - now;
+
+                        if (secondsLeft <= 0) {
+                            countdownDisplay.textContent = 'Sale has ended!';
+                            return;
+                        }
+
+                        const days = Math.floor(secondsLeft / (3600 * 24));
+                        const hours = Math.floor((secondsLeft % (3600 * 24)) / 3600);
+                        const minutes = Math.floor((secondsLeft % 3600) / 60);
+                        const seconds = secondsLeft % 60;
+
+                        countdownDisplay.textContent = 
+                            `${days}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+                    });
+                }
+
+                updateAllCountdowns();
+                setInterval(updateAllCountdowns, 1000);
+            }
+
+            const addToCartForms = document.querySelectorAll('.add-to-cart-form');
+            const cartBadge = document.querySelector('.cart-badge');
+            const ajaxMessageContainer = document.getElementById('ajax-message-container');
+
+            addToCartForms.forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    const form = event.target;
+                    const url = form.action;
+                    const formData = new FormData(form);
+                    const csrfToken = formData.get('csrfmiddlewaretoken');
+
+                    fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (cartBadge) {
+                                cartBadge.textContent = data.cart_item_count;
+                                // Set display to 'inline-block' if count is greater than 0, else 'none'
+                                cartBadge.style.display = data.cart_item_count > 0 ? 'inline-block' : 'none';
+                            }
+                            displayAjaxMessage(data.message, 'success');
+                        } else {
+                            displayAjaxMessage(data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error adding to cart:', error);
+                        displayAjaxMessage('An error occurred. Please try again.', 'error');
+                    });
+                });
+            });
+
+            function displayAjaxMessage(message, type) {
+                ajaxMessageContainer.innerHTML = `<li class="${type}">${message}</li>`;
+                ajaxMessageContainer.style.display = 'block';
+                setTimeout(() => {
+                    ajaxMessageContainer.style.display = 'none';
+                    ajaxMessageContainer.innerHTML = '';
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>

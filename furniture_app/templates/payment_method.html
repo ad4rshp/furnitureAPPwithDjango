@@ -1,0 +1,87 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Method - My Furniture App</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="{% static 'payment.css' %}">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>My Furniture Store</h1>
+            <nav class="main-nav">
+                <a href="{% url 'furniture_app:index' %}">Home</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'furniture_app:user_profile' %}">My Profile</a>
+                    <span class="welcome-message">Hello, {{ user.username }}!</span>
+                {% else %}
+                    <a href="{% url 'furniture_app:login' %}">Login</a>
+                    <a href="{% url 'furniture_app:signup' %}">Sign Up</a>
+                {% endif %}
+                <a href="{% url 'furniture_app:view_cart' %}" class="cart-icon-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    {% if cart_item_count %}
+                        <span class="cart-badge">{{ cart_item_count }}</span>
+                    {% endif %}
+                </a>
+            </nav>
+        </div>
+    </header>
+    <main>
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="payment-container">
+            <h2>Select Payment Method</h2>
+            <p>Your cart total: <strong>₹{{ cart.get_total_price|floatformat:2 }}</strong></p>
+
+            <div class="payment-options">
+                <div class="payment-option">
+                    <input type="radio" id="cod" name="payment_method" value="COD" checked>
+                    <label for="cod">Cash on Delivery (COD)</label>
+                    <p class="payment-description">Pay with cash when your order is delivered.</p>
+                </div>
+                
+                {# Removed Credit/Debit Card option #}
+                {# Removed UPI option #}
+            </div>
+
+            <div class="shipping-address-selection">
+                <h3>Shipping Address</h3>
+                {% if user_addresses %}
+                    <form method="post" action="{% url 'furniture_app:place_order' %}"> {# Updated action to place_order #}
+                        {% csrf_token %}
+                        <select name="shipping_address" id="shipping_address" class="address-select">
+                            {% for address in user_addresses %}
+                                <option value="{{ address.pk }}" {% if address.is_default %}selected{% endif %}>
+                                    {{ address.street_address }}, {{ address.city }}, {{ address.state }} - {{ address.zip_code }} ({{ address.country }}) {% if address.is_default %}(Default){% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <p class="address-note">Please select your preferred shipping address.</p>
+                        <button type="submit" class="place-order-btn">Place Order</button>
+                    </form>
+                {% else %}
+                    <p class="no-address-message">No addresses found. Please <a href="{% url 'furniture_app:user_profile' %}" class="add-address-link">add an address</a> in your profile.</p>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2025 My Furniture App. All rights reserved.</p>
+        {% if user.is_authenticated %}
+            <a href="{% url 'furniture_app:logout' %}" class="footer-logout-link">Logout</a>
+        {% endif %}
+    </footer>
+</body>
+</html>

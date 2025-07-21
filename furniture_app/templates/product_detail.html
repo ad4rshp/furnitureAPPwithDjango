@@ -1,0 +1,220 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} Details - My Furniture App</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="{% static 'product.css' %}"> {# Linked the dedicated CSS file #}
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>My Furniture Store</h1>
+            <nav class="main-nav">
+                <a href="{% url 'furniture_app:index' %}">Home</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'furniture_app:user_profile' %}">My Profile</a>
+                    <span class="welcome-message">Hello, {{ user.username }}!</span>
+                {% else %}
+                    <a href="{% url 'furniture_app:login' %}">Login</a>
+                    <a href="{% url 'furniture_app:signup' %}">Sign Up</a>
+                {% endif %}
+                <a href="{% url 'furniture_app:view_cart' %}" class="cart-icon-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    {% if cart_item_count %}
+                        <span class="cart-badge">{{ cart_item_count }}</span>
+                    {% endif %}
+                </a>
+            </nav>
+        </div>
+    </header>
+    <main>
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {# Custom message area for AJAX feedback #}
+        <div id="ajax-message-container" class="messages" style="display: none;"></div>
+
+        <div class="product-detail-container">
+            <div class="product-detail-image">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                {% else %}
+                    <img src="https://placehold.co/400x400/E0BBE4/957DAD?text=Product+Image" alt="No image available">
+                {% endif %}
+            </div>
+            <div class="product-detail-info">
+                <h2>{{ product.name }}</h2>
+                <p><strong>Category:</strong> {{ product.get_category_display }}</p>
+                <p><strong>Material:</strong> {{ product.get_material_display }}</p>
+                
+                {% if product.on_sale and product.discount_percentage > 0 %}
+                    <p class="original-price"><strong>Original Price:</strong> ₹<del>{{ product.price|floatformat:2 }}</del></p>
+                    <p class="sale-price"><strong>Sale Price:</strong> ₹{{ product.get_discounted_price|floatformat:2 }} ({{ product.discount_percentage|floatformat:0 }}% OFF)</p>
+                {% else %}
+                    <p class="price"><strong>Price:</strong> ₹{{ product.price|floatformat:2 }}</p>
+                {% endif %}
+                
+                {% if product.description %}
+                    <h3>Description:</h3>
+                    <p>{{ product.description }}</p>
+                {% endif %}
+
+                <p class="assembly-status {% if product.requires_assembly %}requires{% else %}no-requires{% endif %}">
+                    {% if product.requires_assembly %}Requires Assembly{% else %}No Assembly Required{% endif %}
+                </p>
+                <p><strong>Availability:</strong> {% if product.is_available %}In Stock{% else %}Out of Stock{% endif %}</p>
+                <p><strong>Added On:</strong> {{ product.created_at|date:"M d, Y" }}</p>
+
+                <div class="product-actions">
+                    <form action="{% url 'furniture_app:add_to_cart' product.pk %}" method="post" class="add-to-cart-detail-form" id="addToCartDetailForm">
+                        {% csrf_token %}
+                        <label for="quantity">Quantity:</label>
+                        <input type="number" id="quantity" name="quantity" value="1" min="1" class="quantity-input">
+                        <button type="submit" class="add-to-cart-btn">Add to Cart</button>
+                    </form>
+                    <a href="{% url 'furniture_app:index' %}" class="back-to-products-btn">Back to Products</a>
+                </div>
+            </div>
+        </div>
+
+        {# Related Products Section #}
+        {% if related_products %}
+            <div class="related-products-section">
+                <h3>Related Products</h3>
+                <div class="related-products-grid">
+                    {% for related_product in related_products %}
+                        <div class="related-product-item">
+                            <a href="{% url 'furniture_app:product_detail' pk=related_product.pk %}" class="product-card-link">
+                                {% if related_product.image %}
+                                    <img src="{{ related_product.image.url }}" alt="{{ related_product.name }}" class="related-product-image">
+                                {% else %}
+                                    <img src="https://placehold.co/150x150/E0BBE4/957DAD?text=Product+Image" alt="No image available" class="related-product-image">
+                                {% endif %}
+                                <h4>{{ related_product.name }}</h4>
+                                {% if related_product.on_sale and related_product.discount_percentage > 0 %}
+                                    <p class="original-price">₹<del>{{ related_product.price|floatformat:2 }}</del></p>
+                                    <p class="sale-price">₹{{ related_product.get_discounted_price|floatformat:2 }}</p>
+                                {% else %}
+                                    <p>₹{{ related_product.price|floatformat:2 }}</p>
+                                {% endif %}
+                            </a>
+                            <form action="{% url 'furniture_app:add_to_cart' related_product.pk %}" method="post" class="add-to-cart-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="add-to-cart-btn">Add to Cart</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </main>
+    <footer>
+        <p>&copy; 2025 My Furniture App. All rights reserved.</p>
+        {% if user.is_authenticated %}
+            <a href="{% url 'furniture_app:logout' %}" class="footer-logout-link">Logout</a>
+        {% endif %}
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const addToCartDetailForm = document.getElementById('addToCartDetailForm');
+            const cartBadge = document.querySelector('.cart-badge');
+            const ajaxMessageContainer = document.getElementById('ajax-message-container');
+
+            if (addToCartDetailForm) {
+                addToCartDetailForm.addEventListener('submit', function(event) {
+                    event.preventDefault(); // Prevent default form submission
+
+                    const form = event.target;
+                    const url = form.action;
+                    const formData = new FormData(form);
+                    const csrfToken = formData.get('csrfmiddlewaretoken');
+
+                    fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': csrfToken, // Important for Django AJAX POST requests
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (cartBadge) {
+                                cartBadge.textContent = data.cart_item_count;
+                                cartBadge.style.display = 'inline-block'; // Ensure it's visible
+                            }
+                            displayAjaxMessage(data.message, 'success');
+                        } else {
+                            displayAjaxMessage(data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error adding to cart:', error);
+                        displayAjaxMessage('An error occurred. Please try again.', 'error');
+                    });
+                });
+            }
+
+            // Also handle add to cart forms in related products section
+            const relatedAddToCartForms = document.querySelectorAll('.related-products-section .add-to-cart-form');
+            relatedAddToCartForms.forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    const form = event.target;
+                    const url = form.action;
+                    const formData = new FormData(form);
+                    const csrfToken = formData.get('csrfmiddlewaretoken');
+
+                    fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (cartBadge) {
+                                cartBadge.textContent = data.cart_item_count;
+                                cartBadge.style.display = 'inline-block';
+                            }
+                            displayAjaxMessage(data.message, 'success');
+                        } else {
+                            displayAjaxMessage(data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error adding to cart:', error);
+                        displayAjaxMessage('An error occurred. Please try again.', 'error');
+                    });
+                });
+            });
+
+
+            function displayAjaxMessage(message, type) {
+                ajaxMessageContainer.innerHTML = `<li class="${type}">${message}</li>`;
+                ajaxMessageContainer.style.display = 'block';
+                // Automatically hide after a few seconds
+                setTimeout(() => {
+                    ajaxMessageContainer.style.display = 'none';
+                    ajaxMessageContainer.innerHTML = '';
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>

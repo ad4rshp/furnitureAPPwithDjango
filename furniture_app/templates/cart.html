@@ -1,0 +1,339 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Shopping Cart - My Furniture App</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="{% static 'cart.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>My Furniture Store</h1>
+            <nav class="main-nav">
+                <a href="{% url 'furniture_app:index' %}">Home</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'furniture_app:user_profile' %}">My Profile</a>
+                    <span class="welcome-message">Hello, {{ user.username }}!</span>
+                {% else %}
+                    <a href="{% url 'furniture_app:login' %}">Login</a>
+                    <a href="{% url 'furniture_app:signup' %}">Sign Up</a>
+                {% endif %}
+                <a href="{% url 'furniture_app:view_cart' %}" class="cart-icon-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    {% if cart_item_count %}
+                        <span class="cart-badge">{{ cart_item_count }}</span>
+                    {% endif %}
+                </a>
+            </nav>
+        </div>
+    </header>
+    <main>
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div id="ajax-message-container" class="messages" style="display: none;"></div>
+
+        <h2>Your Shopping Cart</h2>
+
+        {% if cart.items.all %}
+            <div class="cart-container">
+                <table class="cart-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Image</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-items-tbody">
+                        {% for item in cart.items.all %}
+                            <tr id="cart-item-{{ item.pk }}">
+                                <td data-label="Product">{{ item.product.name }}</td>
+                                <td data-label="Image">
+                                    {% if item.product.image %}
+                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="cart-item-image">
+                                    {% else %}
+                                        <img src="{% static 'placeholder.png' %}" alt="No image" class="cart-item-image">
+                                    {% endif %}
+                                </td>
+                                <td data-label="Price">₹{{ item.price|floatformat:2 }}</td>
+                                <td data-label="Quantity">
+                                    <div class="quantity-control">
+                                        <button type="button" class="quantity-btn minus-btn" data-item-pk="{{ item.pk }}" data-change="-1">-</button>
+                                        <input type="number" class="quantity-input" value="{{ item.quantity }}" min="1" data-item-pk="{{ item.pk }}">
+                                        <button type="button" class="quantity-btn plus-btn" data-item-pk="{{ item.pk }}" data-change="1">+</button>
+                                    </div>
+                                </td>
+                                <td data-label="Total" class="item-total">₹{{ item.get_total|floatformat:2 }}</td>
+                                <td data-label="Actions">
+                                    <div class="cart-item-actions">
+                                        <form action="{% url 'furniture_app:remove_from_cart' item.pk %}" method="post" class="remove-item-form">
+                                            {% csrf_token %}
+                                            <button type="submit" class="remove-item-btn">Remove</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="cart-summary">
+                    <h3>Cart Summary</h3>
+                    <p>Total Items: <span id="cart-total-items">{{ cart_item_count }}</span></p>
+                    <p>Grand Total: <strong><span id="cart-grand-total">₹{{ cart.get_total_price|floatformat:2 }}</span></strong></p>
+                    <a href="{% url 'furniture_app:checkout' %}" class="checkout-btn">Buy Now</a>
+                </div>
+            </div>
+        {% else %}
+            <p id="empty-cart-message" class="empty-cart-message">Your cart is empty. Start shopping now!</p>
+            <p id="continue-shopping-link" style="display: none;"><a href="{% url 'furniture_app:index' %}" class="back-to-products-btn">Continue Shopping</a></p>
+        {% endif %}
+    </main>
+    <footer>
+        <p>&copy; 2025 My Furniture App. All rights reserved.</p>
+        {# Removed the footer logout link as requested #}
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ajaxMessageContainer = document.getElementById('ajax-message-container');
+            const cartBadge = document.querySelector('.cart-badge');
+            const cartTotalItems = document.getElementById('cart-total-items');
+            const cartGrandTotal = document.getElementById('cart-grand-total');
+            const cartContainer = document.querySelector('.cart-container');
+            const emptyCartMessage = document.getElementById('empty-cart-message');
+            const continueShoppingLink = document.getElementById('continue-shopping-link');
+            const cartItemsTbody = document.getElementById('cart-items-tbody');
+
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            const csrfToken = getCookie('csrftoken');
+
+            function displayAjaxMessage(message, type) {
+                ajaxMessageContainer.innerHTML = `<li class="${type}">${message}</li>`;
+                ajaxMessageContainer.style.display = 'block';
+                setTimeout(() => {
+                    ajaxMessageContainer.style.display = 'none';
+                    ajaxMessageContainer.innerHTML = '';
+                }, 5000);
+            }
+
+            function updateCartSummary(newTotalItems, newGrandTotal) {
+                console.log('Updating cart summary:');
+                console.log('New Total Items:', newTotalItems);
+                console.log('New Grand Total:', newGrandTotal);
+
+                if (cartTotalItems) {
+                    cartTotalItems.textContent = newTotalItems;
+                    console.log('cartTotalItems updated to:', cartTotalItems.textContent);
+                }
+                if (cartGrandTotal) {
+                    // Ensure newGrandTotal is a number before calling toFixed
+                    cartGrandTotal.textContent = `₹${parseFloat(newGrandTotal).toFixed(2)}`;
+                    console.log('cartGrandTotal updated to:', cartGrandTotal.textContent);
+                }
+                if (cartBadge) {
+                    cartBadge.textContent = newTotalItems;
+                    cartBadge.style.display = newTotalItems > 0 ? 'inline-block' : 'none';
+                    console.log('cartBadge updated to:', cartBadge.textContent, 'display:', cartBadge.style.display);
+                }
+
+                if (newTotalItems === 0) {
+                    if (cartContainer) cartContainer.style.display = 'none';
+                    if (emptyCartMessage) emptyCartMessage.style.display = 'block';
+                    if (continueShoppingLink) continueShoppingLink.style.display = 'block';
+                    console.log('Cart is now empty, showing empty message.');
+                } else {
+                    if (cartContainer) cartContainer.style.display = 'flex';
+                    if (emptyCartMessage) emptyCartMessage.style.display = 'none';
+                    if (continueShoppingLink) continueShoppingLink.style.display = 'none';
+                    console.log('Cart has items, showing cart container.');
+                }
+            }
+
+            async function updateQuantity(itemPk, newQuantity) {
+                const quantityInput = document.querySelector(`.quantity-input[data-item-pk="${itemPk}"]`);
+                const originalQuantity = parseInt(quantityInput.value);
+
+                console.log(`Attempting to update item ${itemPk} to quantity ${newQuantity}. Original: ${originalQuantity}`);
+
+                try {
+                    const response = await fetch(`/cart/update_quantity/${itemPk}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ quantity: newQuantity })
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error(`HTTP error! Status: ${response.status}, Response text:`, errorText);
+                        displayAjaxMessage(`Server error: ${response.status} - ${response.statusText || 'Unknown error'}`, 'error');
+                        if (quantityInput) {
+                            quantityInput.value = originalQuantity; // Revert on HTTP error
+                        }
+                        return;
+                    }
+
+                    let data;
+                    try {
+                        data = await response.json();
+                        console.log('Received data for quantity update:', data);
+                    } catch (jsonError) {
+                        const errorText = await response.text();
+                        console.error('JSON parsing error:', jsonError, 'Response text:', errorText);
+                        displayAjaxMessage('A data processing error occurred (invalid JSON response). Please try again.', 'error');
+                        if (quantityInput) {
+                            quantityInput.value = originalQuantity; // Revert on JSON parse error
+                        }
+                        return;
+                    }
+                    
+                    if (data.success) {
+                        displayAjaxMessage(data.message, 'success');
+                        const itemRow = document.getElementById(`cart-item-${itemPk}`);
+                        if (itemRow) {
+                            if (data.new_quantity === 0) {
+                                console.log(`Removing item row for item ${itemPk} as new quantity is 0.`);
+                                itemRow.remove();
+                            } else {
+                                console.log(`Updating quantity input for item ${itemPk} to ${data.new_quantity}.`);
+                                quantityInput.value = data.new_quantity;
+                                console.log(`Updating item total for item ${itemPk} to ₹${parseFloat(data.item_total).toFixed(2)}.`);
+                                itemRow.querySelector('.item-total').textContent = `₹${parseFloat(data.item_total).toFixed(2)}`;
+                            }
+                        }
+                        updateCartSummary(data.cart_item_count, data.cart_total_price);
+
+                        if (data.cart_item_count === 0) {
+                            if (cartItemsTbody) cartItemsTbody.innerHTML = ''; // Clear table body if no items
+                            console.log('Cart is now empty, clearing table body.');
+                        }
+                    } else {
+                        displayAjaxMessage(data.message, 'error');
+                        console.log('Backend reported failure. Reverting quantity.');
+                        if (quantityInput && data.current_quantity !== undefined) {
+                            quantityInput.value = data.current_quantity;
+                        } else if (quantityInput) {
+                            quantityInput.value = originalQuantity;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Network error (fetch failed):', error);
+                    displayAjaxMessage('A network error occurred. Please check your internet connection and try again.', 'error');
+                    if (quantityInput) {
+                        quantityInput.value = originalQuantity; // Revert on network error
+                    }
+                }
+            }
+
+            document.querySelectorAll('.quantity-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const itemPk = this.dataset.itemPk;
+                    const quantityInput = document.querySelector(`.quantity-input[data-item-pk="${itemPk}"]`);
+                    const change = parseInt(this.dataset.change);
+                    let newQuantity = parseInt(quantityInput.value) + change;
+
+                    if (newQuantity < 0) newQuantity = 0; // Prevent negative quantity
+
+                    updateQuantity(itemPk, newQuantity);
+                });
+            });
+
+            document.querySelectorAll('.quantity-input').forEach(input => {
+                input.addEventListener('change', function() {
+                    const itemPk = this.dataset.itemPk;
+                    let newQuantity = parseInt(this.value);
+
+                    if (isNaN(newQuantity) || newQuantity < 0) {
+                        newQuantity = 1; // Default to 1 if invalid input
+                        this.value = newQuantity;
+                    }
+
+                    updateQuantity(itemPk, newQuantity);
+                });
+            });
+
+            document.querySelectorAll('.remove-item-form').forEach(form => {
+                form.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+
+                    const form = event.target;
+                    const url = form.action;
+                    const cartItemRow = form.closest('tr');
+                    const itemPk = cartItemRow.id.replace('cart-item-', '');
+
+                    console.log(`Attempting to remove item ${itemPk}.`);
+
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrfToken,
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({})
+                        });
+
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            console.error(`HTTP error! Status: ${response.status}, Text: ${errorText}`);
+                            displayAjaxMessage(`Server error: ${response.status} - ${response.statusText || 'Unknown error'}`, 'error');
+                            return;
+                        }
+
+                        const data = await response.json();
+                        console.log('Received data for remove item:', data);
+
+                        if (data.success) {
+                            displayAjaxMessage(data.message, 'success');
+                            if (cartItemRow) {
+                                console.log(`Removing item row for item ${itemPk}.`);
+                                cartItemRow.remove();
+                            }
+                            updateCartSummary(data.cart_item_count, data.cart_total_price);
+
+                            if (data.cart_item_count === 0) {
+                                if (cartItemsTbody) cartItemsTbody.innerHTML = '';
+                                console.log('Cart is now empty after removal, clearing table body.');
+                            }
+                        } else {
+                            displayAjaxMessage(data.message, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Network or JSON parsing error:', error);
+                        displayAjaxMessage('A network or data processing error occurred. Please try again.', 'error');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

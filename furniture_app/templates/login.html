@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - My Furniture App</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>My Furniture Store</h1>
+            <nav class="main-nav">
+                <a href="{% url 'furniture_app:index' %}">Home</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'furniture_app:user_profile' %}">My Profile</a>
+                    <span class="welcome-message">Hello, {{ user.username }}!</span>
+                {% else %}
+                    {# This link correctly redirects to the login page #}
+                    <a href="{% url 'furniture_app:login' %}">Login</a>
+                    {# This link correctly redirects to the signup page #}
+                    <a href="{% url 'furniture_app:signup' %}">Sign Up</a>
+                {% endif %}
+                <a href="{% url 'furniture_app:view_cart' %}" class="cart-icon-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    {% if cart_item_count %}
+                        <span class="cart-badge">{{ cart_item_count }}</span>
+                    {% endif %}
+                </a>
+            </nav>
+        </div>
+    </header>
+    <main>
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="form-container">
+            <h2>Login</h2>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit">Log In</button>
+            </form>
+            <p class="login-link">Don't have an account? <a href="{% url 'furniture_app:signup' %}">Sign Up</a></p>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2025 My Furniture App. All rights reserved.</p>
+        {% if user.is_authenticated %}
+            <a href="{% url 'furniture_app:logout' %}" class="footer-logout-link">Logout</a>
+        {% endif %}
+    </footer>
+</body>
+</html>

@@ -1,0 +1,275 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - My Furniture App</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="{% static 'userprofile.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>My Furniture Store</h1>
+            <nav class="main-nav">
+                <a href="{% url 'furniture_app:index' %}">Home</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'furniture_app:user_profile' %}">My Profile</a>
+                    <span class="welcome-message">Hello, {{ user.username }}!</span>
+                {% else %}
+                    <a href="{% url 'furniture_app:login' %}">Login</a>
+                    <a href="{% url 'furniture_app:signup' %}">Sign Up</a>
+                {% endif %}
+                <a href="{% url 'furniture_app:view_cart' %}" class="cart-icon-link">
+                    <i class="fas fa-shopping-cart"></i>
+                    {% if cart_item_count %}
+                        <span class="cart-badge">{{ cart_item_count }}</span>
+                    {% endif %}
+                </a>
+            </nav>
+        </div>
+    </header>
+    
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div id="ajax-message-container" class="messages" style="display: none;"></div>
+
+    <div class="profile-container">
+        <h2>Welcome, {{ user.get_full_name }}!</h2>
+
+        <div class="profile-section">
+            <h3>Your Details</h3>
+            <form method="post" id="userProfileUpdateForm">
+                {% csrf_token %}
+                <input type="hidden" name="update_profile_submit" value="true">
+                {{ user_profile_form.as_p }}
+                <button type="submit" class="add-address-btn">Update Profile</button>
+            </form>
+        </div>
+
+        <div class="profile-section">
+            <h3>Your Addresses</h3>
+            {% if addresses %}
+                <div class="address-list">
+                    {% for address in addresses %}
+                        <div class="address-item {% if address.is_default %}default-address{% endif %}">
+                            <p><strong>{{ address.street_address }}</strong></p>
+                            <p>{{ address.city }}, {{ address.state }} - {{ address.zip_code }}</p>
+                            <p>{{ address.country }}</p>
+                            {% if address.phone_number %}<p>Phone: {{ address.phone_number }}</p>{% endif %}
+                            {% if address.is_default %}
+                                <span class="default-badge">Default Address</span>
+                            {% else %}
+                                <div class="address-actions">
+                                    <form action="{% url 'furniture_app:set_default_address' pk=address.pk %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="set-default-btn">Set as Default</button>
+                                    </form>
+                                    <a href="{% url 'furniture_app:edit_address' pk=address.pk %}" class="edit-address-btn">Edit Address</a>
+                                    <form action="{% url 'furniture_app:delete_address' pk=address.pk %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="cancel-order-btn">Delete Address</button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    <button type="button" class="add-new-address-toggle-btn" onclick="document.getElementById('add-address-form-container').style.display = 'block'; this.style.display = 'none';">Add Another Address</button>
+                    <div id="add-address-form-container" class="add-address-form-section" style="display:none;">
+                        <h4>Add New Address</h4>
+                        <form method="post" id="addAddressForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="add_address_submit" value="true">
+                            {{ address_form.as_p }}
+                            <button type="submit" class="add-address-btn">Add Address</button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <p class="no-address-message">You haven't added any addresses yet.</p>
+                <div class="add-address-form-section">
+                    <h4>Add New Address</h4>
+                    <form method="post" id="addAddressForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="add_address_submit" value="true">
+                        {{ address_form.as_p }}
+                        <button type="submit" class="add-address-btn">Add Address</button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="profile-section">
+            <h3>Your Orders</h3>
+            {% if orders %}
+                <div class="order-list">
+                    {% for order in orders %}
+                        <div class="order-item" id="order-{{ order.pk }}">
+                            <p><strong>Order ID:</strong> <a href="{% url 'furniture_app:order_detail' order_pk=order.pk %}">{{ order.id }}</a></p>
+                            <p><strong>Order Date:</strong> {{ order.order_date|date:"F d, Y H:i" }}</p>
+                            <p><strong>Total:</strong> ₹{{ order.total_price|floatformat:2 }}</p>
+                            <p><strong>Status:</strong> <span class="order-status {{ order.status|lower }}">{{ order.get_status_display }}</span></p>
+                            <p><strong>Shipping To:</strong> {{ order.shipping_address.street_address }}, {{ order.shipping_address.city }}</p>
+                            
+                            {% if order.status == 'PENDING' or order.status == 'PROCESSING' %}
+                                <form method="post" action="{% url 'furniture_app:update_order_status' order_pk=order.pk %}" class="cancel-order-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="CANCELLED">
+                                    <button type="submit" class="cancel-order-btn">Cancel Order</button>
+                                </form>
+                            {% elif order.status == 'CANCELLED' %}
+                                <form action="{% url 'furniture_app:delete_order' order_pk=order.pk %}" method="post" class="remove-order-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="remove-order-btn">Remove from List</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>You haven't placed any orders yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="profile-actions">
+            <a href="{% url 'furniture_app:index' %}" class="back-to-products-btn">Continue Shopping</a>
+            <form action="{% url 'furniture_app:logout' %}" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="logout-profile-btn">Logout</button>
+            </form>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2025 My Furniture App. All rights reserved.</p>
+        {# Removed the footer logout link as requested #}
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ajaxMessageContainer = document.getElementById('ajax-message-container');
+
+            function displayAjaxMessage(message, type) {
+                ajaxMessageContainer.innerHTML = `<li class="${type}">${message}</li>`;
+                ajaxMessageContainer.style.display = 'block';
+                setTimeout(() => {
+                    ajaxMessageContainer.style.display = 'none';
+                    ajaxMessageContainer.innerHTML = '';
+                }, 5000);
+            }
+
+            document.querySelectorAll('.cancel-order-form').forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    const form = event.target;
+                    const url = form.action;
+                    const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+                    const orderItem = form.closest('.order-item');
+                    const statusInput = form.querySelector('input[name="status"]');
+                    const newStatus = statusInput ? statusInput.value : 'CANCELLED';
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: `status=${newStatus}`
+                    })
+                    .then(response => {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            return response.json();
+                        } else {
+                            return response.text().then(text => { throw new Error(`Server responded with non-JSON: ${text}`); });
+                        }
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            displayAjaxMessage(data.message, 'success');
+                            if (orderItem) {
+                                const statusSpan = orderItem.querySelector('.order-status');
+                                if (statusSpan) {
+                                    statusSpan.textContent = data.new_status_display;
+                                    statusSpan.className = `order-status ${data.new_status_value.toLowerCase()}`;
+                                }
+                                const orderPk = orderItem.id.replace('order-', '');
+                                const removeFormHtml = `
+                                    <form action="/order/${orderPk}/delete/" method="post" class="remove-order-form">
+                                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                                        <button type="submit" class="remove-order-btn">Remove from List</button>
+                                    </form>
+                                `;
+                                form.outerHTML = removeFormHtml;
+                                const newRemoveForm = orderItem.querySelector('.remove-order-form');
+                                if (newRemoveForm) {
+                                    attachRemoveOrderFormListener(newRemoveForm);
+                                }
+                            }
+                        } else {
+                            displayAjaxMessage(data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error cancelling order:', error);
+                        displayAjaxMessage('An error occurred while cancelling the order. Please try again.', 'error');
+                    });
+                });
+            });
+
+            function attachRemoveOrderFormListener(form) {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    const form = event.target;
+                    const url = form.action;
+                    const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+                    const orderItem = form.closest('.order-item');
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            displayAjaxMessage(data.message, 'success');
+                            if (orderItem) {
+                                orderItem.remove();
+                                const orderList = document.querySelector('.order-list');
+                                if (orderList && orderList.children.length === 0) {
+                                    const noOrdersMessage = document.createElement('p');
+                                    noOrdersMessage.textContent = "You haven't placed any orders yet.";
+                                    noOrdersMessage.classList.add('no-address-message');
+                                    orderList.parentNode.appendChild(noOrdersMessage);
+                                }
+                            }
+                        } else {
+                            displayAjaxMessage(data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error removing order:', error);
+                        displayAjaxMessage('An error occurred while removing the order. Please try again.', 'error');
+                    });
+                });
+            }
+
+            document.querySelectorAll('.remove-order-form').forEach(attachRemoveOrderFormListener);
+        });
+    </script>
+</body>
+</html>
