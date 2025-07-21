@@ -1,15 +1,4 @@
 # furnitureAPPwithDjango
-
-#settings.py
-INSTALLED_APPS = [
-    # ... other Django apps
-    'furniture_app', #our app name
-]
-
-#in terminal 
-python manage.py makemigrations furniture_app
-python manage.py migrate # database migrations to create the necessary tables
-
 README: myfurniture_app
 This is a Django-based web application for managing furniture, including products, users, and other related functionalities.
 
