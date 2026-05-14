@@ -1,135 +1,170 @@
+/* ===== ADMIN DASHBOARD ===== */
 .admin-dashboard-container {
     max-width: 1200px;
-    margin: 30px auto;
-    padding: 30px;
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    font-family: Arial, sans-serif;
+    margin: 0 auto;
 }
 
 .admin-dashboard-container h2 {
-    font-size: 2.2em;
-    color: #333;
-    margin-top: 0;
-    margin-bottom: 25px;
-    border-bottom: 2px solid #007bff;
-    padding-bottom: 10px;
+    font-family: var(--font-display);
+    font-size: 1.7em;
+    color: var(--color-text);
+    margin-bottom: 24px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--color-accent);
 }
 
 .orders-table-wrapper {
-    overflow-x: auto; /* Enable horizontal scrolling on small screens */
-    margin-top: 20px;
+    overflow-x: auto;
+    margin-top: 8px;
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
 }
 
 .orders-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 15px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+    background-color: var(--color-surface);
 }
 
 .orders-table th,
 .orders-table td {
-    padding: 12px 15px;
+    padding: 12px 14px;
     text-align: left;
-    border-bottom: 1px solid #ddd;
-    font-size: 0.9em;
+    border-bottom: 1px solid var(--color-border-light);
+    font-size: 0.85em;
     vertical-align: middle;
 }
 
 .orders-table th {
-    background-color: #eee;
-    font-weight: bold;
-    color: #555;
+    background-color: var(--color-surface-warm);
+    font-weight: 600;
+    color: var(--color-text-secondary);
     text-transform: uppercase;
+    font-size: 0.72em;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
 }
 
 .orders-table tr:last-child td {
     border-bottom: none;
 }
 
+.orders-table tr:hover td {
+    background-color: var(--color-surface-warm);
+}
+
+/* Status badges — reuse from order_detail.css */
 .order-status {
-    padding: 4px 10px;
-    border-radius: 5px;
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
     font-weight: 600;
-    font-size: 0.9em;
+    font-size: 0.75em;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: white;
-    display: inline-block; /* Ensure padding works */
+    white-space: nowrap;
 }
 
-.order-status.pending { background-color: #ffc107; }
-.order-status.processing { background-color: #17a2b8; }
-.order-status.shipped { background-color: #007bff; }
-.order-status.delivered { background-color: #28a745; }
-.order-status.cancelled { background-color: #dc3545; }
+.order-status.pending { background-color: var(--color-warning); }
+.order-status.processing { background-color: var(--color-info); }
+.order-status.shipped { background-color: #5b7bb5; }
+.order-status.delivered { background-color: var(--color-success); }
+.order-status.cancelled { background-color: var(--color-error); }
 
 .status-update-form {
     display: flex;
-    gap: 5px;
+    gap: 6px;
     align-items: center;
 }
 
 .status-select {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 0.9em;
+    padding: 7px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.85em;
     flex-grow: 1;
-    min-width: 100px; /* Ensure select is not too small */
+    min-width: 100px;
+    color: var(--color-text);
+}
+
+.status-select:focus {
+    outline: none;
+    border-color: var(--color-accent);
 }
 
 .update-status-btn {
-    background-color: #007bff;
+    background-color: var(--color-accent);
     color: white;
-    padding: 8px 12px;
+    padding: 7px 12px;
     border: none;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    font-size: 0.9em;
-    font-weight: 600;
-    transition: background-color 0.2s ease;
-    flex-shrink: 0; /* Prevent button from shrinking */
+    font-family: var(--font-body);
+    font-size: 0.82em;
+    font-weight: 500;
+    transition: background-color var(--transition);
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .update-status-btn:hover {
-    background-color: #0056b3;
+    background-color: var(--color-accent-hover);
 }
 
 .view-details-btn {
-    background-color: #6c757d;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 5px;
+    background-color: transparent;
+    color: var(--color-accent);
+    padding: 7px 12px;
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-sm);
     text-decoration: none;
-    font-size: 0.9em;
-    font-weight: 600;
-    transition: background-color 0.2s ease;
-    display: inline-block; /* Ensure padding works */
+    font-family: var(--font-body);
+    font-size: 0.82em;
+    font-weight: 500;
+    transition: all var(--transition);
+    display: inline-block;
+    white-space: nowrap;
 }
 
 .view-details-btn:hover {
-    background-color: #5a6268;
+    background-color: var(--color-accent);
+    color: white;
 }
 
-/* Responsive adjustments for tables */
-@media (max-width: 768px) {
-    .admin-dashboard-container {
-        padding: 20px;
-        margin: 20px auto;
-    }
+.admin-dashboard-actions {
+    margin-top: 24px;
+    text-align: center;
+}
 
+.admin-action-btn {
+    display: inline-block;
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    padding: 10px 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-family: var(--font-body);
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: all var(--transition);
+}
+
+.admin-action-btn:hover {
+    border-color: var(--color-text-muted);
+    color: var(--color-text);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
     .admin-dashboard-container h2 {
-        font-size: 1.8em;
+        font-size: 1.4em;
     }
 
     .orders-table thead {
-        display: none; /* Hide table headers on small screens */
+        display: none;
     }
 
     .orders-table,
@@ -141,51 +176,45 @@
     }
 
     .orders-table tr {
-        margin-bottom: 15px;
-        border: 1px solid #eee;
-        border-radius: 8px;
-        padding: 10px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        margin-bottom: 14px;
+        border: 1px solid var(--color-border-light);
+        border-radius: var(--radius-md);
+        padding: 12px;
+        background: var(--color-surface);
     }
 
     .orders-table td {
         text-align: right;
-        padding-left: 50%;
+        padding: 8px 12px 8px 50%;
         position: relative;
+        border-bottom: 1px solid var(--color-border-light);
+    }
+
+    .orders-table td:last-child {
+        border-bottom: none;
     }
 
     .orders-table td::before {
         content: attr(data-label);
         position: absolute;
-        left: 10px;
-        width: calc(50% - 20px);
-        padding-right: 10px;
-        white-space: nowrap;
+        left: 12px;
+        width: calc(50% - 24px);
         text-align: left;
-        font-weight: bold;
-        color: #333;
+        font-weight: 600;
+        color: var(--color-text);
+        font-size: 0.82em;
     }
-
-    /* Specific labels for each column */
-    .orders-table td:nth-of-type(1)::before { content: "Order ID"; }
-    .orders-table td:nth-of-type(2)::before { content: "Customer"; }
-    .orders-table td:nth-of-type(3)::before { content: "Order Date"; }
-    .orders-table td:nth-of-type(4)::before { content: "Total Price"; }
-    .orders-table td:nth-of-type(5)::before { content: "Shipping Address"; }
-    .orders-table td:nth-of-type(6)::before { content: "Payment Method"; }
-    .orders-table td:nth-of-type(7)::before { content: "Current Status"; }
-    .orders-table td:nth-of-type(8)::before { content: "Update Status"; }
-    .orders-table td:nth-of-type(9)::before { content: "Details"; }
 
     .status-update-form {
         flex-direction: column;
         align-items: flex-end;
-        gap: 8px;
+        gap: 6px;
     }
+
     .status-select, .update-status-btn {
         width: 100%;
-        min-width: unset;
     }
+
     .view-details-btn {
         width: 100%;
         text-align: center;

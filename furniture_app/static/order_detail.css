@@ -1,89 +1,87 @@
-/* General container for the order details page */
+/* ===== ORDER DETAIL PAGE ===== */
 .order-detail-container {
-    max-width: 900px;
-    margin: 30px auto;
-    padding: 30px;
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    font-family: Arial, sans-serif;
+    max-width: 880px;
+    margin: 0 auto;
 }
 
 .order-detail-container h2 {
-    font-size: 2.2em;
-    color: #333;
-    margin-top: 0;
-    margin-bottom: 25px;
-    border-bottom: 2px solid #007bff;
-    padding-bottom: 10px;
+    font-family: var(--font-display);
+    font-size: 1.7em;
+    color: var(--color-text);
+    margin-bottom: 24px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--color-accent);
 }
 
-/* Section styling (summary, items, bill, admin) */
+/* Sections */
 .order-summary-section,
 .order-items-section,
 .bill-summary-section,
 .admin-status-update-section {
-    margin-bottom: 30px;
+    margin-bottom: 24px;
     padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    border: 1px solid #eee;
-    box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+    background-color: var(--color-surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light);
 }
 
 .order-summary-section h3,
 .order-items-section h3,
 .bill-summary-section h3,
 .admin-status-update-section h3 {
-    font-size: 1.5em;
-    color: #007bff;
+    font-family: var(--font-display);
+    font-size: 1.15em;
+    color: var(--color-text);
+    font-weight: 500;
     margin-top: 0;
-    margin-bottom: 15px;
-    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 14px;
     padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-border);
 }
 
 .order-summary-section p {
     margin-bottom: 8px;
-    font-size: 1em;
-    color: #555;
+    font-size: 0.92em;
+    color: var(--color-text-secondary);
 }
 
 .order-summary-section p strong {
-    color: #333;
+    color: var(--color-text);
 }
 
-/* Order Status Badge */
+/* Order Status Badges */
 .order-status {
-    padding: 4px 10px;
-    border-radius: 5px;
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
     font-weight: 600;
-    font-size: 0.9em;
+    font-size: 0.78em;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: white;
 }
 
-.order-status.pending { background-color: #ffc107; }
-.order-status.processing { background-color: #17a2b8; }
-.order-status.shipped { background-color: #007bff; }
-.order-status.delivered { background-color: #28a745; }
-.order-status.cancelled { background-color: #dc3545; }
+.order-status.pending { background-color: var(--color-warning); }
+.order-status.processing { background-color: var(--color-info); }
+.order-status.shipped { background-color: #5b7bb5; }
+.order-status.delivered { background-color: var(--color-success); }
+.order-status.cancelled { background-color: var(--color-error); }
 
-/* Shipping Address Box */
+/* Shipping Address */
 .shipping-address-box {
-    background-color: #e9f5ff;
-    border: 1px solid #b3d9ff;
-    border-radius: 6px;
-    padding: 15px;
-    margin-top: 15px;
+    background-color: var(--color-accent-light);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-top: 12px;
 }
 
 .shipping-address-box p {
-    margin: 0 0 5px 0;
-    font-size: 0.95em;
-    color: #333;
+    margin: 0 0 4px;
+    font-size: 0.9em;
+    color: var(--color-text);
 }
+
 .shipping-address-box p:last-child {
     margin-bottom: 0;
 }
@@ -92,25 +90,27 @@
 .order-items-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 15px;
-    background-color: #ffffff;
-    border-radius: 8px;
+    margin-top: 12px;
+    background-color: var(--color-surface);
+    border-radius: var(--radius-md);
     overflow: hidden;
 }
 
 .order-items-table th,
 .order-items-table td {
-    padding: 12px 15px;
+    padding: 12px 14px;
     text-align: left;
-    border-bottom: 1px solid #ddd;
-    font-size: 0.9em;
+    border-bottom: 1px solid var(--color-border-light);
+    font-size: 0.88em;
 }
 
 .order-items-table th {
-    background-color: #eee;
-    font-weight: bold;
-    color: #555;
+    background-color: var(--color-surface-warm);
+    font-weight: 600;
+    color: var(--color-text-secondary);
     text-transform: uppercase;
+    font-size: 0.75em;
+    letter-spacing: 0.5px;
 }
 
 .order-items-table tr:last-child td {
@@ -118,139 +118,126 @@
 }
 
 .order-item-image {
-    width: 60px;
-    height: 60px;
+    width: 52px;
+    height: 52px;
     object-fit: cover;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     vertical-align: middle;
 }
 
-/* Bill Summary Section */
+/* Bill Summary */
 .bill-summary-section p {
     display: flex;
     justify-content: space-between;
     margin-bottom: 8px;
-    font-size: 1em;
-    color: #555;
+    font-size: 0.92em;
+    color: var(--color-text-secondary);
 }
 
 .bill-summary-section p span {
-    font-weight: bold;
-    color: #333;
+    font-weight: 600;
+    color: var(--color-text);
 }
 
 .bill-summary-section .grand-total {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #000;
-    border-top: 1px dashed #ccc;
-    padding-top: 10px;
-    margin-top: 15px;
+    font-size: 1.05em;
+    font-weight: 700;
+    color: var(--color-text);
+    border-top: 1px dashed var(--color-border);
+    padding-top: 12px;
+    margin-top: 12px;
 }
 
-/* Admin Status Update Section */
+/* Admin Status Update */
 .admin-status-update-section form {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
 .admin-status-update-section label {
-    font-weight: bold;
-    color: #333;
-    font-size: 1em;
-    flex-shrink: 0;
+    font-weight: 600;
+    color: var(--color-text);
+    font-size: 0.9em;
 }
 
 .admin-status-update-section select {
     flex-grow: 1;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 1em;
-    max-width: 250px;
+    padding: 9px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.9em;
+    max-width: 220px;
 }
 
 .update-status-btn {
-    background-color: #28a745;
+    background-color: var(--color-accent);
     color: white;
-    padding: 10px 20px;
+    padding: 9px 18px;
     border: none;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    font-size: 1em;
-    font-weight: 600;
-    transition: background-color 0.2s ease;
+    font-family: var(--font-body);
+    font-size: 0.88em;
+    font-weight: 500;
+    transition: background-color var(--transition);
 }
 
 .update-status-btn:hover {
-    background-color: #218838;
+    background-color: var(--color-accent-hover);
 }
 
-/* Actions at the bottom */
+/* Back button */
 .order-detail-actions {
-    margin-top: 30px;
+    margin-top: 28px;
     text-align: center;
 }
 
 .back-to-profile-btn {
     display: inline-block;
-    background-color: #6c757d;
-    color: white;
-    padding: 12px 25px;
-    border-radius: 8px;
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    padding: 11px 24px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
     text-decoration: none;
-    font-size: 1em;
-    font-weight: 600;
-    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    font-family: var(--font-body);
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: all var(--transition);
 }
 
 .back-to-profile-btn:hover {
-    background-color: #5a6268;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    border-color: var(--color-text-muted);
+    color: var(--color-text);
+    background-color: var(--color-surface-warm);
 }
 
-/* No address message */
 .no-address-message {
     text-align: center;
-    font-size: 1em;
-    color: #dc3545;
-    padding: 15px;
-    border: 1px dashed #dc3545;
-    border-radius: 6px;
-    background-color: #ffe0e0;
-    margin-top: 15px;
+    font-size: 0.9em;
+    color: var(--color-error);
+    padding: 16px;
+    border: 1px dashed var(--color-error);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-error-bg);
+    margin-top: 12px;
 }
 
-/* Responsive adjustments */
+/* Responsive */
 @media (max-width: 768px) {
-    .order-detail-container {
-        padding: 20px;
-        margin: 20px auto;
-    }
-
     .order-detail-container h2 {
-        font-size: 1.8em;
-        margin-bottom: 20px;
+        font-size: 1.4em;
     }
 
     .order-summary-section,
     .order-items-section,
     .bill-summary-section,
     .admin-status-update-section {
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-
-    .order-summary-section h3,
-    .order-items-section h3,
-    .bill-summary-section h3,
-    .admin-status-update-section h3 {
-        font-size: 1.3em;
-        margin-bottom: 10px;
+        padding: 16px;
+        margin-bottom: 18px;
     }
 
     .order-items-table thead {
@@ -267,56 +254,48 @@
 
     .order-items-table tr {
         margin-bottom: 10px;
-        border: 1px solid #eee;
-        border-radius: 6px;
-        padding: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid var(--color-border-light);
+        border-radius: var(--radius-md);
+        padding: 10px;
     }
 
     .order-items-table td {
         text-align: right;
-        padding-left: 50%;
+        padding: 8px 12px 8px 50%;
         position: relative;
+        border-bottom: 1px solid var(--color-border-light);
+    }
+
+    .order-items-table td:last-child {
+        border-bottom: none;
     }
 
     .order-items-table td::before {
         content: attr(data-label);
         position: absolute;
-        left: 8px;
-        width: calc(50% - 16px);
-        padding-right: 8px;
-        white-space: nowrap;
+        left: 12px;
+        width: calc(50% - 24px);
         text-align: left;
-        font-weight: bold;
-        color: #333;
+        font-weight: 600;
+        color: var(--color-text);
+        font-size: 0.85em;
     }
 
-    .order-items-table td:nth-of-type(1)::before { content: "Product"; }
-    .order-items-table td:nth-of-type(2)::before { content: "Image"; }
-    .order-items-table td:nth-of-type(3)::before { content: "Quantity"; }
-    .order-items-table td:nth-of-type(4)::before { content: "Price (per item)"; }
-    .order-items-table td:nth-of-type(5)::before { content: "Subtotal"; }
-
     .order-item-image {
-        display: block;
-        margin: 0 auto 8px auto;
+        margin: 0 0 0 auto;
     }
 
     .admin-status-update-section form {
         flex-direction: column;
         align-items: stretch;
-        gap: 10px;
     }
 
     .admin-status-update-section select {
         max-width: 100%;
-        width: 100%;
     }
 
-    .update-status-btn,
     .back-to-profile-btn {
         width: 100%;
-        padding: 10px 20px;
-        font-size: 1em;
+        text-align: center;
     }
 }

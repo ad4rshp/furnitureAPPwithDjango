@@ -4,84 +4,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Method - My Furniture App</title>
+    <title>Checkout — Adarsh Furniture</title>
     <link rel="stylesheet" href="{% static 'style.css' %}">
     <link rel="stylesheet" href="{% static 'payment.css' %}">
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header>
         <div class="header-content">
-            <h1>My Furniture Store</h1>
-            <nav class="main-nav">
+            <h1><a href="{% url 'furniture_app:index' %}">Adarsh Furniture</a></h1>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
+            <nav class="main-nav" id="mainNav">
                 <a href="{% url 'furniture_app:index' %}">Home</a>
-                {% if user.is_authenticated %}
-                    <a href="{% url 'furniture_app:user_profile' %}">My Profile</a>
-                    <span class="welcome-message">Hello, {{ user.username }}!</span>
-                {% else %}
-                    <a href="{% url 'furniture_app:login' %}">Login</a>
-                    <a href="{% url 'furniture_app:signup' %}">Sign Up</a>
-                {% endif %}
-                <a href="{% url 'furniture_app:view_cart' %}" class="cart-icon-link">
-                    <i class="fas fa-shopping-cart"></i>
-                    {% if cart_item_count %}
-                        <span class="cart-badge">{{ cart_item_count }}</span>
-                    {% endif %}
-                </a>
+                {% if user.is_authenticated %}<a href="{% url 'furniture_app:user_profile' %}">My Profile</a><span class="welcome-message">Hello, {{ user.username }}</span>{% else %}<a href="{% url 'furniture_app:login' %}">Login</a><a href="{% url 'furniture_app:signup' %}">Sign Up</a>{% endif %}
+                <a href="{% url 'furniture_app:view_cart' %}" class="cart-icon-link"><i class="fas fa-shopping-bag"></i><span class="cart-badge{% if not cart_item_count %} hidden{% endif %}">{{ cart_item_count|default:0 }}</span></a>
             </nav>
         </div>
+        <div class="nav-overlay" id="navOverlay"></div>
     </header>
     <main>
-        {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-
+        {% if messages %}<ul class="messages">{% for message in messages %}<li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>{% endfor %}</ul>{% endif %}
         <div class="payment-container">
-            <h2>Select Payment Method</h2>
-            <p>Your cart total: <strong>₹{{ cart.get_total_price|floatformat:2 }}</strong></p>
-
+            <h2>Checkout</h2>
+            <p>Order total: <strong>₹{{ cart.get_total_price|floatformat:2 }}</strong></p>
             <div class="payment-options">
                 <div class="payment-option">
                     <input type="radio" id="cod" name="payment_method" value="COD" checked>
-                    <label for="cod">Cash on Delivery (COD)</label>
-                    <p class="payment-description">Pay with cash when your order is delivered.</p>
+                    <label for="cod">Cash on Delivery</label>
+                    <p class="payment-description">Pay when your order arrives at your doorstep.</p>
                 </div>
-                
-                {# Removed Credit/Debit Card option #}
-                {# Removed UPI option #}
             </div>
-
             <div class="shipping-address-selection">
                 <h3>Shipping Address</h3>
                 {% if user_addresses %}
-                    <form method="post" action="{% url 'furniture_app:place_order' %}"> {# Updated action to place_order #}
-                        {% csrf_token %}
-                        <select name="shipping_address" id="shipping_address" class="address-select">
-                            {% for address in user_addresses %}
-                                <option value="{{ address.pk }}" {% if address.is_default %}selected{% endif %}>
-                                    {{ address.street_address }}, {{ address.city }}, {{ address.state }} - {{ address.zip_code }} ({{ address.country }}) {% if address.is_default %}(Default){% endif %}
-                                </option>
-                            {% endfor %}
-                        </select>
-                        <p class="address-note">Please select your preferred shipping address.</p>
-                        <button type="submit" class="place-order-btn">Place Order</button>
-                    </form>
+                <form method="post" action="{% url 'furniture_app:place_order' %}">
+                    {% csrf_token %}
+                    <select name="shipping_address" id="shipping_address" class="address-select">
+                        {% for address in user_addresses %}
+                        <option value="{{ address.pk }}" {% if address.is_default %}selected{% endif %}>{{ address.street_address }}, {{ address.city }}, {{ address.state }} — {{ address.zip_code }} {% if address.is_default %}(Default){% endif %}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="address-note">Select your preferred delivery address.</p>
+                    <button type="submit" class="place-order-btn">Place Order</button>
+                </form>
                 {% else %}
-                    <p class="no-address-message">No addresses found. Please <a href="{% url 'furniture_app:user_profile' %}" class="add-address-link">add an address</a> in your profile.</p>
+                <p class="no-address-message">No addresses on file. Add one below to continue:</p>
+                <div class="inline-add-address-form">
+                    <form method="post" action="{% url 'furniture_app:checkout' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="add_address_submit" value="true">
+                        {{ address_form.as_p }}
+                        <button type="submit" class="place-order-btn" style="margin-top: 15px;">Save Address & Continue</button>
+                    </form>
+                </div>
                 {% endif %}
             </div>
         </div>
     </main>
-    <footer>
-        <p>&copy; 2025 My Furniture App. All rights reserved.</p>
-        {% if user.is_authenticated %}
-            <a href="{% url 'furniture_app:logout' %}" class="footer-logout-link">Logout</a>
-        {% endif %}
-    </footer>
+    <footer><p>&copy; 2025 Adarsh Furniture</p></footer>
+    <script>
+    var t=document.getElementById('navToggle'),n=document.getElementById('mainNav'),o=document.getElementById('navOverlay');
+    if(t){t.onclick=function(){t.classList.toggle('active');n.classList.toggle('open');o.classList.toggle('active');document.body.style.overflow=n.classList.contains('open')?'hidden':'';};o.onclick=function(){t.classList.remove('active');n.classList.remove('open');o.classList.remove('active');document.body.style.overflow='';};}
+    </script>
 </body>
 </html>

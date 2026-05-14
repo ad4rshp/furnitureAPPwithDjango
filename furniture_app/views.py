@@ -7,10 +7,10 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login, logout
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm
 
 from .models import Product, SaleBanner, Cart, CartItem, Address, Order, OrderItem
-from .forms import AddressForm, UserProfileForm
+from .forms import AddressForm, UserProfileForm, CustomUserCreationForm
 
 
 def get_or_create_cart(request):
@@ -79,7 +79,6 @@ def index(request):
 
     products = Product.objects.filter(is_available=True)
 
-
     category = request.GET.get('category')
     if category:
         products = products.filter(category=category)
@@ -114,7 +113,6 @@ def index(request):
     if is_available_param == 'true':
         products = products.filter(is_available=True)
 
-
     sort_by = request.GET.get('sort_by', '-created_at')
     if sort_by in [opt['value'] for opt in sort_options]:
         products = products.order_by(sort_by)
@@ -127,7 +125,6 @@ def index(request):
     ).order_by('-updated_at')
 
     cart, cart_item_count = get_or_create_cart(request)
-
 
     context = {
         'product_categories': product_categories,
@@ -147,7 +144,14 @@ def add_to_cart(request, product_pk):
 
     if request.method == 'POST':
         product = get_object_or_404(Product, pk=product_pk)
-        quantity = int(request.POST.get('quantity', 1))
+
+        # Validate quantity input
+        try:
+            quantity = int(request.POST.get('quantity', 1))
+            if quantity < 1:
+                quantity = 1
+        except (ValueError, TypeError):
+            quantity = 1
 
         cart, _ = get_or_create_cart(request)
         price_to_store = product.get_discounted_price() if product.on_sale else product.price
@@ -208,7 +212,7 @@ def remove_from_cart(request, item_pk):
         cart_item.delete()
         
         cart, cart_item_count = get_or_create_cart(request)
-        cart_total_price = cart.get_total_price()
+        cart_total_price = float(cart.get_total_price())
 
         messages.info(request, "Item removed from cart.")
         return JsonResponse({
@@ -240,29 +244,34 @@ def update_cart_item_quantity(request, item_pk):
         if new_quantity < 0:
             return JsonResponse({'success': False, 'message': 'Quantity cannot be negative.', 'current_quantity': current_quantity_before_change}, status=400)
 
+        # Capture item_total BEFORE potential deletion
+        item_total = 0.0
         if new_quantity == 0:
+            product_name = cart_item.product.name
             cart_item.delete()
-            message = f"{cart_item.product.name} removed from cart."
+            message = f"{product_name} removed from cart."
         else:
             cart_item.quantity = new_quantity
             cart_item.save()
+            item_total = float(cart_item.get_total())
             message = f"Quantity for {cart_item.product.name} updated."
 
         cart_item_count = cart.items.aggregate(total_quantity=Sum('quantity'))['total_quantity'] or 0
-        cart_total_price = cart.get_total_price()
+        cart_total_price = float(cart.get_total_price())
         request.session['cart_item_count'] = cart_item_count
 
         return JsonResponse({
             'success': True,
             'message': message,
             'new_quantity': new_quantity,
-            'item_total': float(cart_item.get_total()) if new_quantity > 0 else 0.0, # Ensure float
+            'item_total': item_total,
             'cart_item_count': cart_item_count,
-            'cart_total_price': float(cart_total_price), # Ensure float
+            'cart_total_price': cart_total_price,
         })
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=405)
 
 
+@login_required
 def checkout(request):
     cart, cart_item_count = get_or_create_cart(request)
     if not cart.items.exists():
@@ -270,46 +279,58 @@ def checkout(request):
         return redirect('furniture_app:view_cart')
 
     if request.method == 'POST':
-        shipping_address_id = request.POST.get('shipping_address')
-        shipping_address = None
-        if shipping_address_id:
-            try:
-                shipping_address = Address.objects.get(pk=shipping_address_id, user=request.user)
-            except Address.DoesNotExist:
-                messages.error(request, "Selected shipping address is invalid.")
+        if 'add_address_submit' in request.POST:
+            address_form = AddressForm(request.POST)
+            if address_form.is_valid():
+                address = address_form.save(commit=False)
+                address.user = request.user
+                address.save()
+                messages.success(request, "Address added successfully!")
                 return redirect('furniture_app:checkout')
+            else:
+                messages.error(request, "Please correct the errors in the address form.")
         else:
-            messages.error(request, "Please select a shipping address.")
-            return redirect('furniture_app:checkout')
+            shipping_address_id = request.POST.get('shipping_address')
+            shipping_address = None
+            if shipping_address_id:
+                try:
+                    shipping_address = Address.objects.get(pk=shipping_address_id, user=request.user)
+                except Address.DoesNotExist:
+                    messages.error(request, "Selected shipping address is invalid.")
+                    return redirect('furniture_app:checkout')
+            else:
+                messages.error(request, "Please select a shipping address.")
+                return redirect('furniture_app:checkout')
 
-        total_price = cart.get_total_price()
-        order = Order.objects.create(
-            user=request.user if request.user.is_authenticated else None,
-            total_price=total_price,
-            status='PENDING',
-            shipping_address=shipping_address,
-            payment_method='COD'
-        )
-        for item in cart.items.all():
-            OrderItem.objects.create(
-                order=order,
-                product=item.product,
-                quantity=item.quantity,
-                price=item.price
+            total_price = cart.get_total_price()
+            order = Order.objects.create(
+                user=request.user,
+                total_price=total_price,
+                status='PENDING',
+                shipping_address=shipping_address,
+                payment_method='COD'
             )
-        cart.items.all().delete()
-        request.session['cart_item_count'] = 0
-        messages.success(request, f"Your order #{order.id} has been placed successfully!")
-        return redirect('furniture_app:order_detail', order_pk=order.pk)
+            for item in cart.items.all():
+                OrderItem.objects.create(
+                    order=order,
+                    product=item.product,
+                    quantity=item.quantity,
+                    price=item.price
+                )
+            cart.items.all().delete()
+            request.session['cart_item_count'] = 0
+            messages.success(request, f"Your order #{order.id} has been placed successfully!")
+            return redirect('furniture_app:order_detail', order_pk=order.pk)
 
-    user_addresses = []
-    if request.user.is_authenticated:
-        user_addresses = request.user.addresses.all()
+    user_addresses = request.user.addresses.all()
+    # Initialize AddressForm with user's first and last name
+    address_form = AddressForm(initial={'first_name': request.user.first_name, 'last_name': request.user.last_name})
 
     context = {
         'cart': cart,
         'cart_item_count': cart_item_count,
         'user_addresses': user_addresses,
+        'address_form': address_form,
     }
     return render(request, 'payment_method.html', context)
 
@@ -318,6 +339,11 @@ def checkout(request):
 def user_profile(request):
     addresses = request.user.addresses.all()
     orders = request.user.orders.all().order_by('-order_date').prefetch_related('items__product')
+
+    # Always initialize both forms so templates never get an unbound variable
+    user_profile_form = UserProfileForm(instance=request.user)
+    # Prepopulate address form with user's names
+    address_form = AddressForm(initial={'first_name': request.user.first_name, 'last_name': request.user.last_name})
 
     if request.method == 'POST':
         if 'update_profile_submit' in request.POST:
@@ -338,9 +364,6 @@ def user_profile(request):
                 return redirect('furniture_app:user_profile')
             else:
                 messages.error(request, "Please correct the errors in your address form.")
-    else:
-        user_profile_form = UserProfileForm(instance=request.user)
-        address_form = AddressForm()
 
     cart, cart_item_count = get_or_create_cart(request)
 
@@ -510,14 +533,14 @@ def delete_order(request, order_pk):
 
 def signup_view(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
             messages.success(request, "Account created successfully!")
             return redirect('furniture_app:index')
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     
     cart, cart_item_count = get_or_create_cart(request)
     context = {
@@ -546,11 +569,9 @@ def login_view(request):
     return render(request, 'login.html', context)
 
 
-@login_required
 def logout_view(request):
     logout(request)
     messages.info(request, "You have been logged out.")
-    # Redirect to the login page after logout
     return redirect('furniture_app:login')
 
 

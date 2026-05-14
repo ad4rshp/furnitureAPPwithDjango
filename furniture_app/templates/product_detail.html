@@ -4,217 +4,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ product.name }} Details - My Furniture App</title>
+    <title>{{ product.name }} — Adarsh Furniture</title>
     <link rel="stylesheet" href="{% static 'style.css' %}">
-    <link rel="stylesheet" href="{% static 'product.css' %}"> {# Linked the dedicated CSS file #}
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'product.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header>
         <div class="header-content">
-            <h1>My Furniture Store</h1>
-            <nav class="main-nav">
+            <h1><a href="{% url 'furniture_app:index' %}">Adarsh Furniture</a></h1>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
+            <nav class="main-nav" id="mainNav">
                 <a href="{% url 'furniture_app:index' %}">Home</a>
                 {% if user.is_authenticated %}
                     <a href="{% url 'furniture_app:user_profile' %}">My Profile</a>
-                    <span class="welcome-message">Hello, {{ user.username }}!</span>
+                    <span class="welcome-message">Hello, {{ user.username }}</span>
                 {% else %}
                     <a href="{% url 'furniture_app:login' %}">Login</a>
                     <a href="{% url 'furniture_app:signup' %}">Sign Up</a>
                 {% endif %}
                 <a href="{% url 'furniture_app:view_cart' %}" class="cart-icon-link">
-                    <i class="fas fa-shopping-cart"></i>
-                    {% if cart_item_count %}
-                        <span class="cart-badge">{{ cart_item_count }}</span>
-                    {% endif %}
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="cart-badge{% if not cart_item_count %} hidden{% endif %}">{{ cart_item_count|default:0 }}</span>
                 </a>
             </nav>
         </div>
+        <div class="nav-overlay" id="navOverlay"></div>
     </header>
     <main>
-        {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-
-        {# Custom message area for AJAX feedback #}
+        {% if messages %}<ul class="messages">{% for message in messages %}<li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>{% endfor %}</ul>{% endif %}
         <div id="ajax-message-container" class="messages" style="display: none;"></div>
 
         <div class="product-detail-container">
             <div class="product-detail-image">
-                {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
-                {% else %}
-                    <img src="https://placehold.co/400x400/E0BBE4/957DAD?text=Product+Image" alt="No image available">
-                {% endif %}
+                {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}">{% else %}<img src="https://placehold.co/500x500/f5f0eb/9b8e82?text={{ product.name|urlencode }}" alt="{{ product.name }}">{% endif %}
             </div>
             <div class="product-detail-info">
                 <h2>{{ product.name }}</h2>
                 <p><strong>Category:</strong> {{ product.get_category_display }}</p>
                 <p><strong>Material:</strong> {{ product.get_material_display }}</p>
-                
                 {% if product.on_sale and product.discount_percentage > 0 %}
-                    <p class="original-price"><strong>Original Price:</strong> ₹<del>{{ product.price|floatformat:2 }}</del></p>
-                    <p class="sale-price"><strong>Sale Price:</strong> ₹{{ product.get_discounted_price|floatformat:2 }} ({{ product.discount_percentage|floatformat:0 }}% OFF)</p>
+                    <p class="original-price"><strong>Original:</strong> ₹<del>{{ product.price|floatformat:2 }}</del></p>
+                    <p class="sale-price"><strong>Now:</strong> ₹{{ product.get_discounted_price|floatformat:2 }} ({{ product.discount_percentage|floatformat:0 }}% off)</p>
                 {% else %}
                     <p class="price"><strong>Price:</strong> ₹{{ product.price|floatformat:2 }}</p>
                 {% endif %}
-                
-                {% if product.description %}
-                    <h3>Description:</h3>
-                    <p>{{ product.description }}</p>
-                {% endif %}
-
-                <p class="assembly-status {% if product.requires_assembly %}requires{% else %}no-requires{% endif %}">
-                    {% if product.requires_assembly %}Requires Assembly{% else %}No Assembly Required{% endif %}
-                </p>
+                {% if product.description %}<h3>About this piece</h3><p>{{ product.description }}</p>{% endif %}
+                <p class="assembly-status {% if product.requires_assembly %}requires{% else %}no-requires{% endif %}">{% if product.requires_assembly %}Requires Assembly{% else %}Ready to Use{% endif %}</p>
                 <p><strong>Availability:</strong> {% if product.is_available %}In Stock{% else %}Out of Stock{% endif %}</p>
-                <p><strong>Added On:</strong> {{ product.created_at|date:"M d, Y" }}</p>
-
                 <div class="product-actions">
                     <form action="{% url 'furniture_app:add_to_cart' product.pk %}" method="post" class="add-to-cart-detail-form" id="addToCartDetailForm">
                         {% csrf_token %}
-                        <label for="quantity">Quantity:</label>
+                        <label for="quantity">Qty:</label>
                         <input type="number" id="quantity" name="quantity" value="1" min="1" class="quantity-input">
                         <button type="submit" class="add-to-cart-btn">Add to Cart</button>
                     </form>
-                    <a href="{% url 'furniture_app:index' %}" class="back-to-products-btn">Back to Products</a>
+                    <a href="{% url 'furniture_app:index' %}" class="back-to-products-btn">Back</a>
                 </div>
             </div>
         </div>
 
-        {# Related Products Section #}
         {% if related_products %}
-            <div class="related-products-section">
-                <h3>Related Products</h3>
-                <div class="related-products-grid">
-                    {% for related_product in related_products %}
-                        <div class="related-product-item">
-                            <a href="{% url 'furniture_app:product_detail' pk=related_product.pk %}" class="product-card-link">
-                                {% if related_product.image %}
-                                    <img src="{{ related_product.image.url }}" alt="{{ related_product.name }}" class="related-product-image">
-                                {% else %}
-                                    <img src="https://placehold.co/150x150/E0BBE4/957DAD?text=Product+Image" alt="No image available" class="related-product-image">
-                                {% endif %}
-                                <h4>{{ related_product.name }}</h4>
-                                {% if related_product.on_sale and related_product.discount_percentage > 0 %}
-                                    <p class="original-price">₹<del>{{ related_product.price|floatformat:2 }}</del></p>
-                                    <p class="sale-price">₹{{ related_product.get_discounted_price|floatformat:2 }}</p>
-                                {% else %}
-                                    <p>₹{{ related_product.price|floatformat:2 }}</p>
-                                {% endif %}
-                            </a>
-                            <form action="{% url 'furniture_app:add_to_cart' related_product.pk %}" method="post" class="add-to-cart-form">
-                                {% csrf_token %}
-                                <input type="hidden" name="quantity" value="1">
-                                <button type="submit" class="add-to-cart-btn">Add to Cart</button>
-                            </form>
-                        </div>
-                    {% endfor %}
+        <div class="related-products-section">
+            <h3>You May Also Like</h3>
+            <div class="related-products-grid">
+                {% for rp in related_products %}
+                <div class="related-product-item">
+                    <a href="{% url 'furniture_app:product_detail' pk=rp.pk %}" class="product-card-link">
+                        {% if rp.image %}<img src="{{ rp.image.url }}" alt="{{ rp.name }}" class="related-product-image">{% else %}<img src="https://placehold.co/300x300/f5f0eb/9b8e82?text=Product" alt="{{ rp.name }}" class="related-product-image">{% endif %}
+                        <h4>{{ rp.name }}</h4>
+                        {% if rp.on_sale and rp.discount_percentage > 0 %}<p class="original-price">₹<del>{{ rp.price|floatformat:2 }}</del></p><p class="sale-price">₹{{ rp.get_discounted_price|floatformat:2 }}</p>{% else %}<p>₹{{ rp.price|floatformat:2 }}</p>{% endif %}
+                    </a>
+                    <form action="{% url 'furniture_app:add_to_cart' rp.pk %}" method="post" class="add-to-cart-form">{% csrf_token %}<input type="hidden" name="quantity" value="1"><button type="submit" class="add-to-cart-btn">Add to Cart</button></form>
                 </div>
+                {% endfor %}
             </div>
+        </div>
         {% endif %}
     </main>
-    <footer>
-        <p>&copy; 2025 My Furniture App. All rights reserved.</p>
-        {% if user.is_authenticated %}
-            <a href="{% url 'furniture_app:logout' %}" class="footer-logout-link">Logout</a>
-        {% endif %}
-    </footer>
-
+    <footer><p>&copy; 2025 Adarsh Furniture</p></footer>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const addToCartDetailForm = document.getElementById('addToCartDetailForm');
-            const cartBadge = document.querySelector('.cart-badge');
-            const ajaxMessageContainer = document.getElementById('ajax-message-container');
-
-            if (addToCartDetailForm) {
-                addToCartDetailForm.addEventListener('submit', function(event) {
-                    event.preventDefault(); // Prevent default form submission
-
-                    const form = event.target;
-                    const url = form.action;
-                    const formData = new FormData(form);
-                    const csrfToken = formData.get('csrfmiddlewaretoken');
-
-                    fetch(url, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRFToken': csrfToken, // Important for Django AJAX POST requests
-                        },
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            if (cartBadge) {
-                                cartBadge.textContent = data.cart_item_count;
-                                cartBadge.style.display = 'inline-block'; // Ensure it's visible
-                            }
-                            displayAjaxMessage(data.message, 'success');
-                        } else {
-                            displayAjaxMessage(data.message, 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error adding to cart:', error);
-                        displayAjaxMessage('An error occurred. Please try again.', 'error');
-                    });
-                });
-            }
-
-            // Also handle add to cart forms in related products section
-            const relatedAddToCartForms = document.querySelectorAll('.related-products-section .add-to-cart-form');
-            relatedAddToCartForms.forEach(form => {
-                form.addEventListener('submit', function(event) {
-                    event.preventDefault();
-
-                    const form = event.target;
-                    const url = form.action;
-                    const formData = new FormData(form);
-                    const csrfToken = formData.get('csrfmiddlewaretoken');
-
-                    fetch(url, {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRFToken': csrfToken,
-                        },
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            if (cartBadge) {
-                                cartBadge.textContent = data.cart_item_count;
-                                cartBadge.style.display = 'inline-block';
-                            }
-                            displayAjaxMessage(data.message, 'success');
-                        } else {
-                            displayAjaxMessage(data.message, 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error adding to cart:', error);
-                        displayAjaxMessage('An error occurred. Please try again.', 'error');
-                    });
-                });
-            });
-
-
-            function displayAjaxMessage(message, type) {
-                ajaxMessageContainer.innerHTML = `<li class="${type}">${message}</li>`;
-                ajaxMessageContainer.style.display = 'block';
-                // Automatically hide after a few seconds
-                setTimeout(() => {
-                    ajaxMessageContainer.style.display = 'none';
-                    ajaxMessageContainer.innerHTML = '';
-                }, 5000);
-            }
-        });
+    document.addEventListener('DOMContentLoaded', function() {
+        var t=document.getElementById('navToggle'),n=document.getElementById('mainNav'),o=document.getElementById('navOverlay');
+        if(t){t.onclick=function(){t.classList.toggle('active');n.classList.toggle('open');o.classList.toggle('active');document.body.style.overflow=n.classList.contains('open')?'hidden':'';};o.onclick=function(){t.classList.remove('active');n.classList.remove('open');o.classList.remove('active');document.body.style.overflow='';};}
+        var cb=document.querySelector('.cart-badge'),am=document.getElementById('ajax-message-container');
+        function toast(m,tp){var li=document.createElement('li');li.className=tp;li.textContent=m;am.innerHTML='';am.appendChild(li);am.style.display='block';setTimeout(function(){am.style.display='none';am.innerHTML='';},4000);}
+        document.querySelectorAll('.add-to-cart-form,.add-to-cart-detail-form').forEach(function(f){f.addEventListener('submit',function(e){e.preventDefault();var fd=new FormData(f);fetch(f.action,{method:'POST',body:fd,headers:{'X-CSRFToken':fd.get('csrfmiddlewaretoken')}}).then(function(r){return r.json();}).then(function(d){if(d.success){if(cb){cb.textContent=d.cart_item_count;cb.classList.toggle('hidden',d.cart_item_count===0);}toast(d.message,'success');}else{toast(d.message,'error');}}).catch(function(){toast('Something went wrong.','error');});});});
+    });
     </script>
 </body>
 </html>
