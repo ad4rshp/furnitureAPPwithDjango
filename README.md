@@ -20,9 +20,7 @@ I built this project to get hands-on experience with Django's ORM, session manag
    `pip install django`
 3. Run the migrations to set up the database:
    `python manage.py migrate`
-4. I included a quick python script to populate the database with some placeholder products so the site isn't empty:
-   `python seed_db.py`
-5. Start the dev server:
+4. Start the dev server:
    `python manage.py runserver`
 
 You can then view the app at http://127.0.0.1:8000/
