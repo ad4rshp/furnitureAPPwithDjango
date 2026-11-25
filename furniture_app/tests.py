@@ -153,7 +153,7 @@ class FurnitureAppTests(TestCase):
         self.assertEqual(resp_over.status_code, 400)
 
     def test_remove_from_cart_idor_blocked(self):
-        cart_a = Cart.objects.create(user=self.user)
+        cart_a, _ = Cart.objects.get_or_create(user=self.user)
         item_a = CartItem.objects.create(
             cart=cart_a,
             product=self.product,
@@ -278,3 +278,44 @@ class FurnitureAppTests(TestCase):
         resp_settings = self.client.get(reverse('furniture_app:user_settings'))
         self.assertEqual(resp_settings.status_code, 200)
         self.assertContains(resp_settings, 'Account Settings')
+
+    def test_cart_and_order_api_endpoints_and_signals(self):
+        # Signal auto-created Cart on User creation
+        self.assertTrue(Cart.objects.filter(user=self.user).exists())
+
+        # Unauthenticated API cart/orders -> 401
+        self.assertEqual(self.client.get(reverse('furniture_app:api_cart_detail')).status_code, 401)
+        self.assertEqual(self.client.get(reverse('furniture_app:api_order_list')).status_code, 401)
+
+        self.client.force_login(self.user)
+        self.client.post(reverse('furniture_app:add_to_cart', args=[self.product.pk]), {'quantity': 1})
+        cart_resp = self.client.get(reverse('furniture_app:api_cart_detail'))
+        self.assertEqual(cart_resp.status_code, 200)
+        self.assertEqual(cart_resp.json()['item_count'], 1)
+
+        addr = Address.objects.create(
+            user=self.user,
+            first_name='Alice',
+            last_name='Smith',
+            street_address='123 Oak St',
+            city='Mumbai',
+            state='MH',
+            zip_code='400001',
+            country='India',
+        )
+        self.client.post(reverse('furniture_app:checkout'), {
+            'shipping_address': addr.pk,
+            'payment_method': 'Cash on Delivery',
+        })
+        orders_resp = self.client.get(reverse('furniture_app:api_order_list'))
+        self.assertEqual(orders_resp.status_code, 200)
+        self.assertEqual(orders_resp.json()['count'], 1)
+        order_id = orders_resp.json()['orders'][0]['id']
+
+        detail_resp = self.client.get(reverse('furniture_app:api_order_detail', args=[order_id]))
+        self.assertEqual(detail_resp.status_code, 200)
+        self.assertEqual(detail_resp.json()['payment_method'], 'Cash on Delivery')
+
+        # Other user cannot read order via API -> 403
+        self.client.force_login(self.other_user)
+        self.assertEqual(self.client.get(reverse('furniture_app:api_order_detail', args=[order_id])).status_code, 403)

@@ -1,6 +1,6 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from . import views
+from . import api_views, views
 
 app_name = 'furniture_app'
 
@@ -27,7 +27,10 @@ urlpatterns = [
     path('profile/delete_address/<int:pk>/', views.delete_address, name='delete_address'),
     path('order/<int:order_pk>/delete/', views.delete_order, name='delete_order'),
     # JSON API endpoints
-    path('api/health/', views.api_health, name='api_health'),
-    path('api/products/', views.api_product_list, name='api_product_list'),
-    path('api/products/<int:pk>/', views.api_product_detail, name='api_product_detail'),
+    path('api/health/', api_views.api_health, name='api_health'),
+    path('api/products/', api_views.api_product_list, name='api_product_list'),
+    path('api/products/<int:pk>/', api_views.api_product_detail, name='api_product_detail'),
+    path('api/cart/', api_views.api_cart_detail, name='api_cart_detail'),
+    path('api/orders/', api_views.api_order_list, name='api_order_list'),
+    path('api/orders/<int:order_pk>/', api_views.api_order_detail, name='api_order_detail'),
 ]
