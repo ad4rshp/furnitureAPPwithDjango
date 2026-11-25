@@ -9,55 +9,66 @@
 
 {% block content %}
 {% if active_sale_banners %}
-    <div class="carousel-container">
+    <div class="carousel-container" id="saleCarousel">
         <div class="carousel-slides">
             {% for banner in active_sale_banners %}
                 <a href="{% url 'furniture_app:product_detail' pk=banner.featured_product.pk %}" class="carousel-slide {% if forloop.first %}is-active{% endif %}">
                     <div class="sale-banner">
+                        <div class="sale-banner-content">
+                            <span class="sale-badge">Limited Offer</span>
+                            <p class="sale-banner-text">
+                                {% if banner.custom_message %}
+                                    {{ banner.custom_message }}
+                                {% else %}
+                                    Save {{ banner.featured_product.discount_percentage|floatformat:0 }}% on {{ banner.featured_product.name }}
+                                {% endif %}
+                            </p>
+                            <div class="sale-banner-meta">
+                                {% if banner.sale_end_date %}
+                                    <p class="sale-countdown" data-sale-end-timestamp="{{ banner.sale_end_date|date:'U' }}">
+                                        <i class="fa-regular fa-clock"></i> Ends in <span class="countdown-display"></span>
+                                    </p>
+                                {% else %}
+                                    <p class="sale-countdown">Limited time offer</p>
+                                {% endif %}
+                                <span class="sale-cta">Shop Offer <i class="fa-solid fa-arrow-right"></i></span>
+                            </div>
+                        </div>
                         {% if banner.featured_product.image %}
                             <img src="{{ banner.featured_product.image.url }}" alt="{{ banner.featured_product.name }}" class="sale-banner-image">
                         {% else %}
                             <img src="{% static 'placeholder.png' %}" alt="{{ banner.featured_product.name }}" class="sale-banner-image">
                         {% endif %}
-                        <div class="sale-banner-content">
-                            <p class="sale-banner-text">
-                                <i class="fa-solid fa-tag"></i>
-                                {% if banner.custom_message %}
-                                    {{ banner.custom_message }}
-                                {% else %}
-                                    <strong>SALE IS LIVE!</strong> Get {{ banner.featured_product.discount_percentage|floatformat:0 }}% flat discount on {{ banner.featured_product.name }}!
-                                {% endif %}
-                            </p>
-                            {% if banner.sale_end_date %}
-                                <p class="sale-countdown" data-sale-end-timestamp="{{ banner.sale_end_date|date:'U' }}">
-                                    <i class="fa-regular fa-clock"></i> Sale ends in: <span class="countdown-display"></span>
-                                </p>
-                            {% else %}
-                                <p class="sale-countdown">Limited time offer!</p>
-                            {% endif %}
-                        </div>
                     </div>
                 </a>
             {% endfor %}
         </div>
-        <div class="carousel-dots">
-            {% for banner in active_sale_banners %}
-                <span class="dot {% if forloop.first %}active{% endif %}"></span>
-            {% endfor %}
-        </div>
+        {% if active_sale_banners|length > 1 %}
+            <button type="button" class="carousel-nav-btn carousel-nav-btn--prev" aria-label="Previous offer">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button type="button" class="carousel-nav-btn carousel-nav-btn--next" aria-label="Next offer">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+            <div class="carousel-dots">
+                {% for banner in active_sale_banners %}
+                    <span class="dot {% if forloop.first %}active{% endif %}"></span>
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
 {% endif %}
 
-<h2>Our Furniture Collection</h2>
+<h2 class="section-heading">Our Furniture Collection</h2>
 
 <div class="filter-section">
     <form method="get" class="filter-form" id="filterForm">
-        <div class="filter-group">
+        <div class="filter-group filter-group--search">
             <input type="text" name="q" id="searchQuery" value="{{ search_query|default:'' }}" placeholder="Search furniture..." class="filter-search-input" aria-label="Search furniture">
         </div>
 
         <div class="filter-group">
-            <select name="category" id="category" aria-label="Filter by category">
+            <select name="category" id="category" class="filter-select" aria-label="Filter by category">
                 <option value="">All Categories</option>
                 {% for key, value in product_categories %}
                     <option value="{{ key }}" {% if request.GET.category == key %}selected{% endif %}>{{ value }}</option>
@@ -66,7 +77,7 @@
         </div>
 
         <div class="filter-group">
-            <select name="material" id="material" aria-label="Filter by material">
+            <select name="material" id="material" class="filter-select" aria-label="Filter by material">
                 <option value="">All Materials</option>
                 {% for key, value in product_materials %}
                     <option value="{{ key }}" {% if request.GET.material == key %}selected{% endif %}>{{ value }}</option>
@@ -75,58 +86,59 @@
         </div>
 
         <div class="filter-group">
-            <select name="sort_by" id="sort_by" aria-label="Sort products">
+            <select name="sort_by" id="sort_by" class="filter-select" aria-label="Sort products">
                 {% for option in sort_options %}
                     <option value="{{ option.value }}" {% if request.GET.sort_by == option.value %}selected{% endif %}>{{ option.label }}</option>
                 {% endfor %}
             </select>
         </div>
 
-        <div class="filter-group checkbox-group">
-            <input type="checkbox" name="is_available" id="is_available" value="true" {% if request.GET.is_available == 'true' %}checked{% endif %}>
-            <label for="is_available">In-Stock Only</label>
-        </div>
+        <div class="filter-actions">
+            <label class="toggle-switch" for="is_available">
+                <input type="checkbox" name="is_available" id="is_available" value="true" {% if request.GET.is_available == 'true' %}checked{% endif %}>
+                <span class="toggle-slider" aria-hidden="true"></span>
+                <span>In-Stock</span>
+            </label>
 
-        <a href="{% url 'furniture_app:index' %}" class="clear-filters-button">
-            <i class="fa-solid fa-rotate-left"></i> Reset
-        </a>
+            <a href="{% url 'furniture_app:index' %}" class="clear-filters-button">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+            </a>
+        </div>
     </form>
 </div>
 
-<div class="product-scroll-container">
-    <div class="product-grid">
-        {% if products %}
-            {% for product in products %}
-                <div class="product-item">
-                    <a href="{% url 'furniture_app:product_detail' pk=product.pk %}" class="product-card-link">
-                        {% if product.image %}
-                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image" loading="lazy">
-                        {% else %}
-                            <img src="{% static 'placeholder.png' %}" alt="No image available" class="product-image">
-                        {% endif %}
+<div class="product-grid">
+    {% if products %}
+        {% for product in products %}
+            <div class="product-item">
+                <a href="{% url 'furniture_app:product_detail' pk=product.pk %}" class="product-card-link">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image" loading="lazy">
+                    {% else %}
+                        <img src="{% static 'placeholder.png' %}" alt="No image available" class="product-image">
+                    {% endif %}
 
-                        <h3>{{ product.name }}</h3>
-                        {% if product.on_sale and product.discount_percentage > 0 %}
-                            <p class="original-price">₹<del>{{ product.price|floatformat:2 }}</del></p>
-                            <p class="sale-price">₹{{ product.get_discounted_price|floatformat:2 }} ({{ product.discount_percentage|floatformat:0 }}% OFF)</p>
-                        {% else %}
-                            <p>₹{{ product.price|floatformat:2 }}</p>
-                        {% endif %}
-                    </a>
+                    <h3>{{ product.name }}</h3>
+                    {% if product.on_sale and product.discount_percentage > 0 %}
+                        <p class="original-price">₹<del>{{ product.price|floatformat:2 }}</del></p>
+                        <p class="sale-price">₹{{ product.get_discounted_price|floatformat:2 }} ({{ product.discount_percentage|floatformat:0 }}% OFF)</p>
+                    {% else %}
+                        <p>₹{{ product.price|floatformat:2 }}</p>
+                    {% endif %}
+                </a>
 
-                    <form action="{% url 'furniture_app:add_to_cart' product.pk %}" method="post" class="add-to-cart-form">
-                        {% csrf_token %}
-                        <input type="hidden" name="quantity" value="1">
-                        <button type="submit" class="add-to-cart-btn">
-                            <i class="fa-solid fa-cart-plus"></i> Add to Cart
-                        </button>
-                    </form>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p>No products found matching your criteria. Adjust your filters or <a href="{% url 'furniture_app:index' %}">view all products</a>.</p>
-        {% endif %}
-    </div>
+                <form action="{% url 'furniture_app:add_to_cart' product.pk %}" method="post" class="add-to-cart-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit" class="add-to-cart-btn">
+                        <i class="fa-solid fa-cart-plus"></i> Add to Cart
+                    </button>
+                </form>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No products found matching your criteria. Adjust your filters or <a href="{% url 'furniture_app:index' %}">view all products</a>.</p>
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -140,35 +152,58 @@
             });
         }
 
-        const carouselContainer = document.querySelector('.carousel-container');
-        if (carouselContainer) {
-            const slides = document.querySelectorAll('.carousel-slide');
-            const dots = document.querySelectorAll('.dot');
+        const carousel = document.getElementById('saleCarousel');
+        if (carousel) {
+            const slides = carousel.querySelectorAll('.carousel-slide');
+            const dots = carousel.querySelectorAll('.dot');
+            const prevBtn = carousel.querySelector('.carousel-nav-btn--prev');
+            const nextBtn = carousel.querySelector('.carousel-nav-btn--next');
             let currentSlideIndex = 0;
-            let slideInterval;
+            let slideInterval = null;
 
             function showSlide(index) {
+                const target = (index + slides.length) % slides.length;
                 slides.forEach((slide, i) => {
-                    slide.classList.toggle('is-active', i === index);
-                    if (dots[i]) dots[i].classList.toggle('active', i === index);
+                    slide.classList.toggle('is-active', i === target);
+                    if (dots[i]) dots[i].classList.toggle('active', i === target);
                 });
-                currentSlideIndex = index;
+                currentSlideIndex = target;
+            }
+
+            function startAutoSlide() {
+                if (slides.length <= 1) return;
+                clearInterval(slideInterval);
+                slideInterval = setInterval(() => showSlide(currentSlideIndex + 1), 5000);
+            }
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showSlide(currentSlideIndex - 1);
+                    startAutoSlide();
+                });
+            }
+            if (nextBtn) {
+                nextBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showSlide(currentSlideIndex + 1);
+                    startAutoSlide();
+                });
             }
 
             dots.forEach((dot, idx) => {
                 dot.addEventListener('click', () => {
                     showSlide(idx);
-                    clearInterval(slideInterval);
-                    slideInterval = setInterval(() => showSlide((currentSlideIndex + 1) % slides.length), 8000);
+                    startAutoSlide();
                 });
             });
 
-            if (slides.length > 1) {
-                slideInterval = setInterval(() => showSlide((currentSlideIndex + 1) % slides.length), 8000);
-            }
+            carousel.addEventListener('mouseenter', () => clearInterval(slideInterval));
+            carousel.addEventListener('mouseleave', startAutoSlide);
+            startAutoSlide();
 
             function updateAllCountdowns() {
-                document.querySelectorAll('.sale-countdown').forEach(el => {
+                carousel.querySelectorAll('.sale-countdown').forEach(el => {
                     const display = el.querySelector('.countdown-display');
                     if (!display) return;
                     const endTs = parseInt(el.dataset.saleEndTimestamp, 10);
@@ -178,7 +213,7 @@
                     }
                     const secondsLeft = endTs - Math.floor(Date.now() / 1000);
                     if (secondsLeft <= 0) {
-                        display.textContent = 'Sale has ended!';
+                        display.textContent = 'Ended';
                         return;
                     }
                     const d = Math.floor(secondsLeft / 86400);

@@ -176,19 +176,26 @@ class Command(BaseCommand):
             else:
                 updated_count += 1
 
-        featured = Product.objects.filter(on_sale=True).first()
-        if featured:
-            SaleBanner.objects.update_or_create(
-                title='Seasonal Furniture Sale',
-                defaults={
-                    'featured_product': featured,
-                    'custom_message': f'Seasonal Sale: Save {int(featured.discount_percentage)}% on {featured.name} and more!',
-                    'sale_end_date': timezone.now() + timedelta(days=30),
-                    'is_active': True,
-                },
-            )
-            # Deactivate expired banners
-            SaleBanner.objects.filter(sale_end_date__lt=timezone.now()).update(is_active=False)
+        on_sale_products = list(Product.objects.filter(on_sale=True).order_by('id'))
+        SaleBanner.objects.filter(sale_end_date__lt=timezone.now()).update(is_active=False)
+
+        banner_specs = [
+            ('Living Room Sofa Event', 0, 21),
+            ('Dining & Bedroom Savings', 1, 14),
+            ('Accent Chair Flash Deal', 2, 7),
+        ]
+        for title, idx, days in banner_specs:
+            if idx < len(on_sale_products):
+                prod = on_sale_products[idx]
+                SaleBanner.objects.update_or_create(
+                    title=title,
+                    defaults={
+                        'featured_product': prod,
+                        'custom_message': f'Save {int(prod.discount_percentage)}% on {prod.name}',
+                        'sale_end_date': timezone.now() + timedelta(days=days),
+                        'is_active': True,
+                    },
+                )
 
         self.stdout.write(
             self.style.SUCCESS(
