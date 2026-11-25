@@ -1,13 +1,4 @@
-.cart-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 24px;
-    align-items: flex-start;
-}
-
 .cart-table {
-    flex: 2;
-    min-width: 300px;
     width: 100%;
     border-collapse: collapse;
     background: var(--surface-card);
@@ -34,8 +25,19 @@
     letter-spacing: 0.04em;
 }
 
-.cart-table tr:last-child td {
+.cart-table tfoot td {
+    background-color: var(--primary-light);
     border-bottom: none;
+    border-top: 2px solid var(--border-subtle);
+    font-weight: 600;
+}
+
+.cart-table-footer-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
 }
 
 .cart-item-image {
@@ -108,43 +110,12 @@
     color: #fff;
 }
 
-.cart-summary {
-    flex: 1;
-    min-width: 260px;
-    background: var(--surface-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    padding: 22px;
-    box-shadow: var(--shadow-sm);
-}
-
-.cart-summary h3 {
-    margin: 0 0 14px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-subtle);
-    font-size: 1.15rem;
-}
-
-.cart-summary p {
-    display: flex;
-    justify-content: space-between;
-    margin: 10px 0;
-    color: var(--ink-secondary);
-}
-
-.cart-summary strong {
-    color: var(--ink-primary);
-    font-size: 1.15rem;
-}
-
 .checkout-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    width: 100%;
-    margin-top: 18px;
-    padding: 12px 18px;
+    padding: 10px 20px;
     background: var(--primary-dark);
     color: var(--primary-light);
     text-decoration: none;
@@ -183,22 +154,13 @@
 }
 
 @media (max-width: 768px) {
-    .cart-container {
-        flex-direction: column;
-    }
-
-    .cart-table,
-    .cart-summary {
-        min-width: 100%;
-        width: 100%;
-    }
-
     .cart-table thead {
         display: none;
     }
 
     .cart-table,
     .cart-table tbody,
+    .cart-table tfoot,
     .cart-table tr,
     .cart-table td {
         display: block;
@@ -223,5 +185,18 @@
         font-weight: 600;
         color: var(--ink-secondary);
         font-size: 0.85rem;
+    }
+
+    .cart-table tfoot td::before {
+        content: none;
+    }
+
+    .cart-table-footer-meta {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .checkout-btn {
+        width: 100%;
     }
 }

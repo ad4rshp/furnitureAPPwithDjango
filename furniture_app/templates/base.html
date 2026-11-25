@@ -20,6 +20,7 @@
                 <a href="{% url 'furniture_app:index' %}" class="nav-link">Home</a>
                 {% if user.is_authenticated %}
                     <a href="{% url 'furniture_app:user_profile' %}" class="nav-link">My Profile</a>
+                    <a href="{% url 'furniture_app:user_settings' %}" class="nav-link">Settings</a>
                     {% if user.is_staff %}
                         <a href="{% url 'furniture_app:admin_view_all_orders' %}" class="nav-link">Orders</a>
                         <a href="{% url 'admin:index' %}" class="nav-link">Admin</a>

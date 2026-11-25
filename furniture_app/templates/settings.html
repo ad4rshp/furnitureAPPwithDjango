@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Settings — My Furniture Store{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'userprofile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <h2>Account Settings</h2>
+
+    <div class="settings-grid">
+        <div class="profile-section">
+            <h3>Account Information</h3>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="update_account_submit" value="true">
+                {{ profile_form.as_p }}
+                <button type="submit" class="add-address-btn">Save Account</button>
+            </form>
+        </div>
+
+        <div class="profile-section">
+            <h3>Change Password</h3>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="change_password_submit" value="true">
+                {{ password_form.as_p }}
+                <button type="submit" class="add-address-btn">Update Password</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -9,7 +9,8 @@ from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth import login
+from django.contrib.auth import login, update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.views.decorators.http import require_GET, require_POST
 
 from .models import Product, SaleBanner, Cart, CartItem, Address, Order, OrderItem
@@ -472,6 +473,34 @@ def user_profile(request):
         'orders': orders,
         'user_profile_form': user_profile_form,
         'address_form': address_form,
+    })
+
+
+@login_required
+def user_settings(request):
+    profile_form = UserProfileForm(instance=request.user)
+    password_form = PasswordChangeForm(request.user)
+
+    if request.method == 'POST':
+        if 'update_account_submit' in request.POST:
+            profile_form = UserProfileForm(request.POST, instance=request.user)
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(request, "Account details updated.")
+                return redirect('furniture_app:user_settings')
+            messages.error(request, "Please fix the errors in your account details.")
+        elif 'change_password_submit' in request.POST:
+            password_form = PasswordChangeForm(request.user, request.POST)
+            if password_form.is_valid():
+                user = password_form.save()
+                update_session_auth_hash(request, user)
+                messages.success(request, "Password updated successfully.")
+                return redirect('furniture_app:user_settings')
+            messages.error(request, "Please fix the errors in your password form.")
+
+    return render(request, 'settings.html', {
+        'profile_form': profile_form,
+        'password_form': password_form,
     })
 
 

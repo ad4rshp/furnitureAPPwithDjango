@@ -274,3 +274,7 @@ class FurnitureAppTests(TestCase):
         resp_addr = self.client.get(reverse('furniture_app:add_address'))
         self.assertEqual(resp_addr.status_code, 200)
         self.assertContains(resp_addr, 'Add New Address')
+
+        resp_settings = self.client.get(reverse('furniture_app:user_settings'))
+        self.assertEqual(resp_settings.status_code, 200)
+        self.assertContains(resp_settings, 'Account Settings')
