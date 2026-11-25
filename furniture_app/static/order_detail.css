@@ -21,8 +21,7 @@
 /* Section styling (summary, items, bill, admin) */
 .order-summary-section,
 .order-items-section,
-.bill-summary-section,
-.admin-status-update-section {
+.bill-summary-section {
     margin-bottom: 30px;
     padding: 20px;
     background-color: #f9f9f9;
@@ -33,8 +32,7 @@
 
 .order-summary-section h3,
 .order-items-section h3,
-.bill-summary-section h3,
-.admin-status-update-section h3 {
+.bill-summary-section h3 {
     font-size: 1.5em;
     color: #007bff;
     margin-top: 0;
@@ -148,30 +146,6 @@
     margin-top: 15px;
 }
 
-/* Admin Status Update Section */
-.admin-status-update-section form {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-.admin-status-update-section label {
-    font-weight: bold;
-    color: #333;
-    font-size: 1em;
-    flex-shrink: 0;
-}
-
-.admin-status-update-section select {
-    flex-grow: 1;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 1em;
-    max-width: 250px;
-}
-
 .update-status-btn {
     background-color: #28a745;
     color: white;
@@ -239,16 +213,14 @@
 
     .order-summary-section,
     .order-items-section,
-    .bill-summary-section,
-    .admin-status-update-section {
+    .bill-summary-section {
         padding: 15px;
         margin-bottom: 20px;
     }
 
     .order-summary-section h3,
     .order-items-section h3,
-    .bill-summary-section h3,
-    .admin-status-update-section h3 {
+    .bill-summary-section h3 {
         font-size: 1.3em;
         margin-bottom: 10px;
     }
@@ -300,17 +272,6 @@
     .order-item-image {
         display: block;
         margin: 0 auto 8px auto;
-    }
-
-    .admin-status-update-section form {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-    }
-
-    .admin-status-update-section select {
-        max-width: 100%;
-        width: 100%;
     }
 
     .update-status-btn,
