@@ -1,0 +1,208 @@
+.payment-container {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    font-family: Arial, sans-serif;
+}
+
+.payment-container h2 {
+    font-size: 2em;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+.payment-container p {
+    font-size: 1.1em;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.payment-container p strong {
+    color: #000;
+}
+
+.payment-options {
+    margin-top: 25px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.payment-options h3 {
+    font-size: 1.4em;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.payment-option {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background-color: #fff;
+    transition: box-shadow 0.2s ease;
+}
+
+.payment-option:hover:not(.disabled) {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.payment-option input[type="radio"] {
+    margin-top: 5px;
+    margin-right: 15px;
+    transform: scale(1.2);
+    accent-color: #007bff;
+}
+
+.payment-option label {
+    font-weight: bold;
+    color: #333;
+    font-size: 1.1em;
+    cursor: pointer;
+    flex-grow: 1;
+}
+
+.payment-option .payment-description {
+    font-size: 0.9em;
+    color: #777;
+    margin-top: 5px;
+    margin-left: -28px;
+    flex-basis: 100%;
+    padding-left: 43px;
+}
+
+.payment-option[disabled] label,
+.payment-option[disabled] .payment-description {
+    color: #aaa;
+    cursor: not-allowed;
+}
+
+.payment-option input[type="radio"]:disabled + label {
+    color: #aaa;
+    cursor: not-allowed;
+}
+
+.shipping-address-selection {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.shipping-address-selection h3 {
+    font-size: 1.4em;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.address-select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+    margin-bottom: 15px;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+.address-select option {
+    padding: 8px;
+}
+
+.address-note {
+    font-size: 0.9em;
+    color: #777;
+    margin-bottom: 20px;
+}
+
+.place-order-btn {
+    background-color: #28a745;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: 600;
+    width: 100%;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.place-order-btn:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+
+.no-address-message {
+    text-align: center;
+    font-size: 1em;
+    color: #dc3545;
+    padding: 15px;
+    border: 1px dashed #dc3545;
+    border-radius: 6px;
+    background-color: #ffe0e0;
+    margin-bottom: 20px;
+}
+
+.no-address-message .add-address-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.no-address-message .add-address-link:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .payment-container {
+        padding: 20px;
+        margin: 20px auto;
+    }
+
+    .payment-container h2 {
+        font-size: 1.8em;
+    }
+
+    .payment-options,
+    .shipping-address-selection {
+        padding: 15px;
+    }
+
+    .payment-option {
+        flex-wrap: wrap;
+    }
+
+    .payment-option input[type="radio"] {
+        margin-top: 0;
+    }
+
+    .payment-option label {
+        flex-basis: auto;
+    }
+
+    .payment-option .payment-description {
+        margin-left: 0;
+        padding-left: 0;
+        text-align: left;
+        width: 100%;
+    }
+
+    .place-order-btn {
+        padding: 10px 20px;
+        font-size: 1em;
+    }
+}
