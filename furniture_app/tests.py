@@ -260,3 +260,13 @@ class FurnitureAppTests(TestCase):
 
         pmissing = self.client.get(reverse('furniture_app:api_product_detail', args=[99999]))
         self.assertEqual(pmissing.status_code, 404)
+
+    def test_custom_error_pages_and_add_address(self):
+        resp_404 = self.client.get('/nonexistent-page-xyz/')
+        self.assertEqual(resp_404.status_code, 404)
+        self.assertContains(resp_404, 'Page Not Found', status_code=404)
+
+        self.client.force_login(self.user)
+        resp_addr = self.client.get(reverse('furniture_app:add_address'))
+        self.assertEqual(resp_addr.status_code, 200)
+        self.assertContains(resp_addr, 'Add New Address')

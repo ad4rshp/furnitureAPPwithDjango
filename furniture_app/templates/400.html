@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}400 Bad Request — Atelier Living{% endblock %}
+
+{% block content %}
+<div class="error-card">
+    <div class="error-card__icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+    <p class="error-card__code">400</p>
+    <h2 class="error-card__title">Invalid Request</h2>
+    <p class="error-card__desc">{{ error_message|default:"The request could not be understood. Please check your input and try again." }}</p>
+    <div class="error-card__actions">
+        <a href="{% url 'furniture_app:index' %}" class="back-to-products-btn">
+            <i class="fa-solid fa-arrow-left"></i> Back to Catalog
+        </a>
+    </div>
+</div>
+{% endblock %}

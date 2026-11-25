@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}404 Page Not Found — Atelier Living{% endblock %}
+
+{% block content %}
+<div class="error-card">
+    <div class="error-card__icon"><i class="fa-solid fa-compass"></i></div>
+    <p class="error-card__code">404</p>
+    <h2 class="error-card__title">Page Not Found</h2>
+    <p class="error-card__desc">The furniture piece or page you're looking for doesn't exist or has been moved.</p>
+    <div class="error-card__actions">
+        <a href="{% url 'furniture_app:index' %}" class="back-to-products-btn">
+            <i class="fa-solid fa-store"></i> Browse Furniture
+        </a>
+    </div>
+</div>
+{% endblock %}

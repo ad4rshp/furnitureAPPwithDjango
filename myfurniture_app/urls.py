@@ -10,3 +10,8 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+handler400 = 'furniture_app.views.error_400'
+handler403 = 'furniture_app.views.error_403'
+handler404 = 'furniture_app.views.error_404'
+handler500 = 'furniture_app.views.error_500'

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Shipping Address — Atelier Living{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'userprofile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2><i class="fa-solid fa-location-dot"></i> Add New Address</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit"><i class="fa-solid fa-check"></i> Save Address</button>
+    </form>
+    <p class="login-link"><a href="{% url 'furniture_app:user_profile' %}">Cancel and Go Back to Profile</a></p>
+</div>
+{% endblock %}
