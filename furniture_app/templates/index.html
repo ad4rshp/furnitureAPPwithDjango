@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Catalog — Atelier Living{% endblock %}
+{% block title %}Catalog — My Furniture Store{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'carousel.css' %}">
@@ -33,7 +33,7 @@
                                     <i class="fa-regular fa-clock"></i> Sale ends in: <span class="countdown-display"></span>
                                 </p>
                             {% else %}
-                                <p class="sale-countdown"><i class="fa-solid fa-sparkles"></i> Limited time offer!</p>
+                                <p class="sale-countdown">Limited time offer!</p>
                             {% endif %}
                         </div>
                     </div>
@@ -48,7 +48,7 @@
     </div>
 {% endif %}
 
-<h2><i class="fa-solid fa-chair"></i> Our Furniture Collection</h2>
+<h2>Our Furniture Collection</h2>
 
 <div class="filter-section">
     <form method="get" class="filter-form" id="filterForm">

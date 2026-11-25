@@ -4,55 +4,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Atelier Living — Handcrafted Furniture{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231e293b'/%3E%3Cpath d='M16 34v-8a6 6 0 0 1 6-6h20a6 6 0 0 1 6 6v8h4v10h-4v4h-4v-4H20v4h-4v-4h-4V34h4zm4 0h24v-8a2 2 0 0 0-2-2H22a2 2 0 0 0-2 2v8z' fill='%23ffffff'/%3E%3C/svg%3E">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>{% block title %}My Furniture Store{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2318181b'/%3E%3Cpath d='M16 34v-8a6 6 0 0 1 6-6h20a6 6 0 0 1 6 6v8h4v10h-4v4h-4v-4H20v4h-4v-4h-4V34h4zm4 0h24v-8a2 2 0 0 0-2-2H22a2 2 0 0 0-2 2v8z' fill='%23ffffff'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'style.css' %}">
     <link rel="stylesheet" href="{% static 'liquid-glass.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <div class="ambient-bg" aria-hidden="true">
-        <div class="ambient-orb ambient-orb--1"></div>
-        <div class="ambient-orb ambient-orb--2"></div>
-        <div class="ambient-orb ambient-orb--3"></div>
-    </div>
-
     <header class="glass-header">
         <div class="header-content">
             <a href="{% url 'furniture_app:index' %}" class="brand-link">
-                <span class="brand-icon"><i class="fa-solid fa-couch"></i></span>
-                <h1 class="brand-title">Atelier Living</h1>
+                <h1 class="brand-title">My Furniture Store</h1>
             </a>
             <nav class="main-nav" aria-label="Main navigation">
-                <a href="{% url 'furniture_app:index' %}" class="nav-link">
-                    <i class="fa-solid fa-store"></i> Catalog
-                </a>
+                <a href="{% url 'furniture_app:index' %}" class="nav-link">Home</a>
                 {% if user.is_authenticated %}
-                    <a href="{% url 'furniture_app:user_profile' %}" class="nav-link">
-                        <i class="fa-solid fa-user"></i> Profile
-                    </a>
+                    <a href="{% url 'furniture_app:user_profile' %}" class="nav-link">My Profile</a>
                     {% if user.is_staff %}
-                        <a href="{% url 'furniture_app:admin_view_all_orders' %}" class="nav-link nav-link--accent">
-                            <i class="fa-solid fa-boxes-stacked"></i> Orders
-                        </a>
-                        <a href="{% url 'admin:index' %}" class="nav-link nav-link--accent">
-                            <i class="fa-solid fa-sliders"></i> Admin
-                        </a>
+                        <a href="{% url 'furniture_app:admin_view_all_orders' %}" class="nav-link">Orders</a>
+                        <a href="{% url 'admin:index' %}" class="nav-link">Admin</a>
                     {% endif %}
-                    <span class="welcome-pill">
-                        <i class="fa-regular fa-circle-user"></i> {{ user.username }}
-                    </span>
+                    <span class="welcome-pill">{{ user.username }}</span>
                 {% else %}
-                    <a href="{% url 'furniture_app:login' %}" class="nav-link">
-                        <i class="fa-solid fa-right-to-bracket"></i> Login
-                    </a>
-                    <a href="{% url 'furniture_app:signup' %}" class="nav-link nav-link--accent">
-                        <i class="fa-solid fa-user-plus"></i> Sign Up
-                    </a>
+                    <a href="{% url 'furniture_app:login' %}" class="nav-link">Login</a>
+                    <a href="{% url 'furniture_app:signup' %}" class="nav-link">Sign Up</a>
                 {% endif %}
                 <a href="{% url 'furniture_app:view_cart' %}" class="cart-icon-link" aria-label="Shopping cart">
                     <i class="fa-solid fa-cart-shopping"></i>
@@ -80,13 +56,11 @@
     </main>
 
     <footer class="glass-footer">
-        <p>&copy; 2026 Atelier Living &middot; Handcrafted Furniture Store</p>
+        <p>&copy; 2026 My Furniture Store</p>
         {% if user.is_authenticated %}
             <form method="post" action="{% url 'furniture_app:logout' %}" style="display:inline;">
                 {% csrf_token %}
-                <button type="submit" class="footer-logout-btn">
-                    <i class="fa-solid fa-right-from-bracket"></i> Logout
-                </button>
+                <button type="submit" class="footer-logout-btn">Logout</button>
             </form>
         {% endif %}
     </footer>

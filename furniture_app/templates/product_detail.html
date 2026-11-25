@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ product.name }} — Atelier Living{% endblock %}
+{% block title %}{{ product.name }} — My Furniture Store{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'product.css' %}">
@@ -58,7 +58,7 @@
 
 {% if related_products %}
     <div class="related-products-section">
-        <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Related Products</h3>
+        <h3>Related Products</h3>
         <div class="related-products-grid">
             {% for related_product in related_products %}
                 <div class="related-product-item">
