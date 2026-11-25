@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Checkout & Payment — My Furniture Store{% endblock %}
+{% block title %}Checkout — My Furniture Store{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'payment.css' %}">
@@ -9,22 +9,20 @@
 
 {% block content %}
 <div class="payment-container">
-    <h2><i class="fa-solid fa-credit-card"></i> Checkout & Payment</h2>
-    <p>Your cart total: <strong>₹{{ cart.get_total_price|floatformat:2 }}</strong></p>
-
-    <div class="payment-options">
-        <div class="payment-option">
-            <input type="radio" id="cod" name="payment_method" value="COD" checked>
-            <label for="cod"><i class="fa-solid fa-money-bill-wave"></i> Cash on Delivery (COD)</label>
-            <p class="payment-description">Pay with cash when your furniture is delivered.</p>
-        </div>
-    </div>
+    <h2>Checkout</h2>
+    <p class="payment-total">Order Total: <strong>₹{{ cart.get_total_price|floatformat:2 }}</strong></p>
 
     <div class="shipping-address-selection">
-        <h3><i class="fa-solid fa-location-dot"></i> Shipping Address</h3>
+        <h3>Payment &amp; Shipping</h3>
         {% if user_addresses %}
             <form method="post" action="{% url 'furniture_app:place_order' %}">
                 {% csrf_token %}
+                <label class="payment-option" for="cod">
+                    <input type="radio" id="cod" name="payment_method" value="Cash on Delivery" checked>
+                    <span>Cash on Delivery</span>
+                </label>
+
+                <label for="shipping_address" style="display:block; margin-bottom:6px; font-weight:500;">Shipping Address</label>
                 <select name="shipping_address" id="shipping_address" class="address-select">
                     {% for address in user_addresses %}
                         <option value="{{ address.pk }}" {% if address.is_default %}selected{% endif %}>
@@ -32,14 +30,12 @@
                         </option>
                     {% endfor %}
                 </select>
-                <p class="address-note">Select your preferred shipping address.</p>
-                <button type="submit" class="place-order-btn">
-                    <i class="fa-solid fa-check"></i> Place Order
-                </button>
+
+                <button type="submit" class="place-order-btn">Place Order</button>
             </form>
         {% else %}
             <p class="no-address-message">
-                No addresses found. Please <a href="{% url 'furniture_app:add_address' %}" class="add-address-link">add a shipping address</a> before placing your order.
+                No shipping address saved. <a href="{% url 'furniture_app:add_address' %}" class="add-address-link">Add an address</a> to continue.
             </p>
         {% endif %}
     </div>

@@ -27,6 +27,13 @@ class AddressForm(forms.ModelForm):
             'is_default': 'Set as default address',
         }
 
+    def clean_zip_code(self):
+        zip_code = (self.cleaned_data.get('zip_code') or '').strip()
+        if len(zip_code) < 3 or len(zip_code) > 12:
+            raise forms.ValidationError("Enter a valid postal/zip code (3–12 characters).")
+        return zip_code
+
+
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
@@ -43,8 +50,8 @@ class UserProfileForm(forms.ModelForm):
         }
 
     def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if email and User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
+        email = (self.cleaned_data.get('email') or '').strip().lower()
+        if email and User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError("This email address is already in use by another account.")
         return email
 
@@ -58,6 +65,12 @@ class CustomUserCreationForm(BaseUserCreationForm):
         labels = {
             'email': 'Email Address',
         }
+
+    def clean_email(self):
+        email = (self.cleaned_data.get('email') or '').strip().lower()
+        if email and User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("This email address is already registered.")
+        return email
 
     def save(self, commit=True):
         user = super().save(commit=False)

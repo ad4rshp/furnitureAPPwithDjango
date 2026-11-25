@@ -224,8 +224,16 @@ def add_to_cart(request, product_pk):
                 product=product,
                 defaults={'quantity': quantity, 'price': price_to_store},
             )
+            desired_quantity = quantity if created else cart_item.quantity + quantity
+            if product.stock_quantity > 0 and desired_quantity > product.stock_quantity:
+                if created:
+                    cart_item.delete()
+                return JsonResponse(
+                    {'success': False, 'message': f'Only {product.stock_quantity} left in stock.'},
+                    status=400,
+                )
             if not created:
-                cart_item.quantity = min(cart_item.quantity + quantity, 99)
+                cart_item.quantity = min(desired_quantity, 99)
                 cart_item.price = price_to_store
                 cart_item.save()
 
@@ -318,6 +326,16 @@ def update_cart_item_quantity(request, item_pk):
             status=400,
         )
 
+    if new_quantity > 0 and cart_item.product.stock_quantity > 0 and new_quantity > cart_item.product.stock_quantity:
+        return JsonResponse(
+            {
+                'success': False,
+                'message': f'Only {cart_item.product.stock_quantity} left in stock.',
+                'current_quantity': current_quantity,
+            },
+            status=400,
+        )
+
     try:
         if new_quantity == 0:
             product_name = cart_item.product.name
@@ -369,16 +387,29 @@ def checkout(request):
             messages.error(request, "Selected shipping address is invalid.")
             return redirect('furniture_app:checkout')
 
+        payment_method = request.POST.get('payment_method', 'Cash on Delivery').strip()
+        if payment_method not in ('Cash on Delivery', 'COD'):
+            messages.error(request, "Invalid payment method selected.")
+            return redirect('furniture_app:checkout')
+
         try:
             with transaction.atomic():
                 cart_items = list(cart.items.select_related('product').all())
+                for item in cart_items:
+                    if not item.product.is_available:
+                        messages.error(request, f"{item.product.name} is no longer available.")
+                        return redirect('furniture_app:view_cart')
+                    if item.product.stock_quantity > 0 and item.quantity > item.product.stock_quantity:
+                        messages.error(request, f"Only {item.product.stock_quantity} of {item.product.name} available.")
+                        return redirect('furniture_app:view_cart')
+
                 total_price = sum(item.get_total() for item in cart_items)
                 order = Order.objects.create(
                     user=request.user,
                     total_price=total_price,
                     status='PENDING',
                     shipping_address=shipping_address,
-                    payment_method='COD',
+                    payment_method='Cash on Delivery',
                 )
                 OrderItem.objects.bulk_create([
                     OrderItem(

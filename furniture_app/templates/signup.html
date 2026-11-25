@@ -1,14 +1,36 @@
 {% extends 'base.html' %}
 
-{% block title %}Create Account — My Furniture Store{% endblock %}
+{% block title %}Sign Up — My Furniture Store{% endblock %}
 
 {% block content %}
 <div class="form-container">
-    <h2><i class="fa-solid fa-user-plus"></i> Create Account</h2>
+    <h2>Create Account</h2>
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit"><i class="fa-solid fa-check"></i> Register</button>
+        {% if form.non_field_errors %}
+            <ul class="errorlist">
+                {% for err in form.non_field_errors %}
+                    <li>{{ err }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% for field in form %}
+            <p>
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <span class="helptext">{{ field.help_text }}</span>
+                {% endif %}
+                {% if field.errors %}
+                    <ul class="errorlist">
+                        {% for err in field.errors %}
+                            <li>{{ err }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </p>
+        {% endfor %}
+        <button type="submit">Create Account</button>
     </form>
     <p class="login-link">Already have an account? <a href="{% url 'furniture_app:login' %}">Log In</a></p>
 </div>

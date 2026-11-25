@@ -6,7 +6,7 @@ app_name = 'furniture_app'
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    path('login/', auth_views.LoginView.as_view(template_name='login.html', redirect_authenticated_user=True), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='furniture_app:login'), name='logout'),
     path('signup/', views.signup_view, name='signup'),
     path('product/<int:pk>/', views.product_detail, name='product_detail'),

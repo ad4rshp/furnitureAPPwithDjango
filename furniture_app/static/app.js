@@ -21,7 +21,7 @@
         return null;
     }
 
-    function showToast(message, type = 'info', duration = 4500) {
+    function showToast(message, type = 'info', duration = 4000) {
         let container = document.getElementById('toast-container');
         if (!container) {
             container = document.createElement('div');
@@ -61,16 +61,21 @@
         if (!toast || toast.dataset.dismissed) return;
         toast.dataset.dismissed = '1';
         toast.classList.add('glass-toast--leaving');
-        setTimeout(() => toast.remove(), 260);
+        setTimeout(() => toast.remove(), 220);
     }
 
-    function updateCartBadge(count) {
+    function updateCartBadge(count, animate = false) {
         const badge = document.querySelector('.cart-badge');
         if (!badge) return;
         const parsed = parseInt(count, 10) || 0;
         badge.textContent = parsed;
         badge.classList.toggle('hidden', parsed <= 0);
         badge.style.display = parsed > 0 ? 'inline-flex' : 'none';
+        if (animate && parsed > 0) {
+            badge.classList.remove('cart-badge--pop');
+            void badge.offsetWidth;
+            badge.classList.add('cart-badge--pop');
+        }
     }
 
     async function parseJsonSafe(response) {
@@ -115,18 +120,30 @@
                     }
 
                     if (response.ok && data.success) {
-                        updateCartBadge(data.cart_item_count);
+                        updateCartBadge(data.cart_item_count, true);
+                        if (submitBtn) {
+                            submitBtn.classList.add('add-to-cart-btn--added');
+                            submitBtn.innerHTML = '<i class="fa-solid fa-check"></i> Added';
+                            setTimeout(() => {
+                                submitBtn.classList.remove('add-to-cart-btn--added');
+                                submitBtn.innerHTML = originalHtml;
+                                submitBtn.disabled = false;
+                            }, 1100);
+                        }
                         showToast(data.message || 'Added to cart.', 'success');
                     } else {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalHtml;
+                        }
                         showToast(data.message || 'Could not add item to cart.', 'error');
                     }
                 } catch {
-                    showToast('Network error while adding to cart. Please try again.', 'error');
-                } finally {
                     if (submitBtn) {
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = originalHtml;
                     }
+                    showToast('Network error while adding to cart.', 'error');
                 }
             });
         });

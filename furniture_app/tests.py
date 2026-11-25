@@ -148,6 +148,10 @@ class FurnitureAppTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.json()['cart_item_count'], 2)
 
+        # Exceeding stock -> 400
+        resp_over = self.client.post(url, {'quantity': 10})
+        self.assertEqual(resp_over.status_code, 400)
+
     def test_remove_from_cart_idor_blocked(self):
         cart_a = Cart.objects.create(user=self.user)
         item_a = CartItem.objects.create(
